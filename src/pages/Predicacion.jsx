@@ -1,0 +1,194 @@
+import { useEffect, useState } from 'react'
+import Layout from '../components/Layout'
+import { useAuth } from '../lib/AuthContext'
+import { supabase } from '../lib/supabaseClient'
+
+const vacioSalida = { grupo_id: '', fecha: '', hora: '', punto_encuentro: '', notas: '' }
+
+function formatearFecha(f) {
+  return new Date(f + 'T00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' })
+}
+
+export default function Predicacion() {
+  const { puedeEditar, esAdmin } = useAuth()
+  const esEditor = puedeEditar('predicacion')
+  const [grupos, setGrupos] = useState([])
+  const [salidas, setSalidas] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [form, setForm] = useState(vacioSalida)
+  const [editandoId, setEditandoId] = useState(null)
+  const [mostrarForm, setMostrarForm] = useState(false)
+  const [nuevoGrupo, setNuevoGrupo] = useState('')
+
+  async function cargar() {
+    setCargando(true)
+    const [{ data: g }, { data: s }] = await Promise.all([
+      supabase.from('grupos').select('*').order('nombre'),
+      supabase
+        .from('salidas_predicacion')
+        .select('*, grupos(nombre)')
+        .gte('fecha', new Date().toISOString().slice(0, 10))
+        .order('fecha', { ascending: true }),
+    ])
+    setGrupos(g || [])
+    setSalidas(s || [])
+    setCargando(false)
+  }
+
+  useEffect(() => {
+    cargar()
+  }, [])
+
+  async function agregarGrupo(e) {
+    e.preventDefault()
+    if (!nuevoGrupo.trim()) return
+    await supabase.from('grupos').insert({ nombre: nuevoGrupo.trim() })
+    setNuevoGrupo('')
+    cargar()
+  }
+
+  function editar(s) {
+    setForm({
+      grupo_id: s.grupo_id || '',
+      fecha: s.fecha,
+      hora: s.hora || '',
+      punto_encuentro: s.punto_encuentro || '',
+      notas: s.notas || '',
+    })
+    setEditandoId(s.id)
+    setMostrarForm(true)
+  }
+
+  function nueva() {
+    setForm(vacioSalida)
+    setEditandoId(null)
+    setMostrarForm(true)
+  }
+
+  async function guardar(e) {
+    e.preventDefault()
+    const payload = { ...form, grupo_id: form.grupo_id || null }
+    if (editandoId) await supabase.from('salidas_predicacion').update(payload).eq('id', editandoId)
+    else await supabase.from('salidas_predicacion').insert(payload)
+    setMostrarForm(false)
+    setForm(vacioSalida)
+    setEditandoId(null)
+    cargar()
+  }
+
+  async function eliminar(id) {
+    if (!confirm('¿Eliminar esta salida?')) return
+    await supabase.from('salidas_predicacion').delete().eq('id', id)
+    cargar()
+  }
+
+  return (
+    <Layout>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display text-2xl font-semibold">Predicación</h1>
+        {esEditor && (
+          <button onClick={nueva} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
+            + salida
+          </button>
+        )}
+      </div>
+
+      {esAdmin && (
+        <details className="mb-6 border border-ink/10 rounded-lg bg-white p-4">
+          <summary className="cursor-pointer font-mono text-xs text-ink-soft">gestionar grupos ({grupos.length})</summary>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {grupos.map((g) => (
+              <li key={g.id} className="text-sm bg-paper-dim rounded-full px-3 py-1">{g.nombre}</li>
+            ))}
+          </ul>
+          <form onSubmit={agregarGrupo} className="mt-3 flex gap-2">
+            <input
+              placeholder="Nombre del nuevo grupo"
+              value={nuevoGrupo}
+              onChange={(e) => setNuevoGrupo(e.target.value)}
+              className="flex-1 border border-ink/15 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-petrol"
+            />
+            <button className="bg-petrol text-paper text-sm rounded-md px-3 hover:bg-petrol-dark">agregar</button>
+          </form>
+        </details>
+      )}
+
+      {mostrarForm && (
+        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+          <select
+            value={form.grupo_id}
+            onChange={(e) => setForm({ ...form, grupo_id: e.target.value })}
+            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
+          >
+            <option value="">Sin grupo asignado</option>
+            {grupos.map((g) => (
+              <option key={g.id} value={g.id}>{g.nombre}</option>
+            ))}
+          </select>
+          <div className="flex gap-3">
+            <input
+              required
+              type="date"
+              value={form.fecha}
+              onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+              className="flex-1 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
+            />
+            <input
+              type="time"
+              value={form.hora}
+              onChange={(e) => setForm({ ...form, hora: e.target.value })}
+              className="flex-1 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
+            />
+          </div>
+          <input
+            placeholder="Punto de encuentro"
+            value={form.punto_encuentro}
+            onChange={(e) => setForm({ ...form, punto_encuentro: e.target.value })}
+            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
+          />
+          <textarea
+            placeholder="Notas"
+            value={form.notas}
+            onChange={(e) => setForm({ ...form, notas: e.target.value })}
+            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
+            rows={2}
+          />
+          <div className="flex gap-2">
+            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
+              Guardar
+            </button>
+            <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+
+      {cargando && <p className="text-ink-soft text-sm">Cargando…</p>}
+      {!cargando && salidas.length === 0 && <p className="text-ink-soft text-sm">No hay salidas programadas.</p>}
+
+      <div className="flex flex-col gap-3">
+        {salidas.map((s) => (
+          <div key={s.id} className="border border-ink/10 rounded-lg bg-white p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="font-display text-lg font-semibold">{s.grupos?.nombre || 'Grupo general'}</h3>
+                <p className="font-mono text-xs text-gold mt-0.5">
+                  {formatearFecha(s.fecha)} {s.hora && `· ${s.hora.slice(0, 5)}`}
+                </p>
+              </div>
+              {esEditor && (
+                <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0">
+                  <button onClick={() => editar(s)} className="hover:text-petrol">editar</button>
+                  <button onClick={() => eliminar(s.id)} className="hover:text-clay">borrar</button>
+                </div>
+              )}
+            </div>
+            {s.punto_encuentro && <p className="text-sm text-ink-soft mt-1">📍 {s.punto_encuentro}</p>}
+            {s.notas && <p className="text-sm text-ink-soft mt-1">{s.notas}</p>}
+          </div>
+        ))}
+      </div>
+    </Layout>
+  )
+}
