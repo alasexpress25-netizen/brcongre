@@ -112,6 +112,9 @@ export default function VidaMinisterio() {
   const [partesDetectadas, setPartesDetectadas] = useState([])
   const [importandoWol, setImportandoWol] = useState(false)
 
+  const [formCabecera, setFormCabecera] = useState({ presidente_id: '', oracion_inicial_id: '', oracion_final_id: '' })
+  const [cabeceraActivaId, setCabeceraActivaId] = useState(null)
+
   async function cargar() {
     setCargando(true)
     const { data: sems } = await supabase
@@ -235,6 +238,40 @@ export default function VidaMinisterio() {
   async function eliminarParte(id) {
     if (!confirm('¿Eliminar esta parte?')) return
     await supabase.from('partes_vida_ministerio').delete().eq('id', id)
+    cargar()
+  }
+
+  function abrirCabecera(semana) {
+    setFormCabecera({
+      presidente_id: semana.presidente_id || '',
+      oracion_inicial_id: semana.oracion_inicial_id || '',
+      oracion_final_id: semana.oracion_final_id || '',
+    })
+    setCabeceraActivaId(semana.id)
+  }
+
+  async function guardarCabecera(e) {
+    e.preventDefault()
+    const semana = semanas.find((s) => s.id === cabeceraActivaId)
+    const payload = {
+      presidente_id: formCabecera.presidente_id || null,
+      oracion_inicial_id: formCabecera.oracion_inicial_id || null,
+      oracion_final_id: formCabecera.oracion_final_id || null,
+    }
+    await supabase.from('semanas_vida_ministerio').update(payload).eq('id', cabeceraActivaId)
+
+    const fechaTexto = new Date(semana.fecha_inicio + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
+    if (payload.presidente_id && payload.presidente_id !== semana.presidente_id) {
+      notificar([payload.presidente_id], 'Te asignaron presidir Vida y Ministerio', `Vas a presidir el programa del ${fechaTexto}.`)
+    }
+    if (payload.oracion_inicial_id && payload.oracion_inicial_id !== semana.oracion_inicial_id) {
+      notificar([payload.oracion_inicial_id], 'Te asignaron la oración inicial', `Tenés la oración inicial del ${fechaTexto}.`)
+    }
+    if (payload.oracion_final_id && payload.oracion_final_id !== semana.oracion_final_id) {
+      notificar([payload.oracion_final_id], 'Te asignaron la oración final', `Tenés la oración final del ${fechaTexto}.`)
+    }
+
+    setCabeceraActivaId(null)
     cargar()
   }
 
@@ -382,16 +419,33 @@ export default function VidaMinisterio() {
       <div className="flex flex-col gap-8">
         {semanas.map((semana) => (
           <div key={semana.id} className="border border-ink/10 rounded-lg bg-white overflow-hidden">
-            <div className="bg-paper-dim px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-3">
-                <p className="font-display font-semibold">{formatearRango(semana.fecha_inicio)}</p>
-                {semana.lectura_biblia && <p className="font-mono text-xs text-ink-soft uppercase">{semana.lectura_biblia}</p>}
+            <div className="bg-paper-dim px-4 py-3 flex flex-col gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="font-display font-semibold">{formatearRango(semana.fecha_inicio)}</p>
+                  {semana.lectura_biblia && <p className="font-mono text-xs text-ink-soft uppercase">{semana.lectura_biblia}</p>}
+                </div>
+                <div className="font-mono text-xs text-ink-soft flex flex-wrap gap-3 items-center">
+                  <span>Presidente <b className="text-ink"><NombreOFranja nombre={semana.presidente?.nombre} /></b></span>
+                  {semana.cantico_inicial && <span>🎵{semana.cantico_inicial}</span>}
+                  <span>Oración <b className="text-ink"><NombreOFranja nombre={semana.oracion_inicial?.nombre} /></b></span>
+                  {esEditorOraciones && cabeceraActivaId !== semana.id && (
+                    <button onClick={() => abrirCabecera(semana)} className="hover:text-petrol">editar</button>
+                  )}
+                </div>
               </div>
-              <div className="font-mono text-xs text-ink-soft flex flex-wrap gap-3 items-center">
-                <span>Presidente <b className="text-ink"><NombreOFranja nombre={semana.presidente?.nombre} /></b></span>
-                {semana.cantico_inicial && <span>🎵{semana.cantico_inicial}</span>}
-                <span>Oración <b className="text-ink"><NombreOFranja nombre={semana.oracion_inicial?.nombre} /></b></span>
-              </div>
+
+              {cabeceraActivaId === semana.id && (
+                <form onSubmit={guardarCabecera} className="border border-ink/10 rounded-lg bg-white p-3 flex flex-wrap gap-2 items-center">
+                  {selectorPersona('Presidente', formCabecera.presidente_id, (e) => setFormCabecera({ ...formCabecera, presidente_id: e.target.value }))}
+                  {selectorPersona('Oración inicial', formCabecera.oracion_inicial_id, (e) => setFormCabecera({ ...formCabecera, oracion_inicial_id: e.target.value }))}
+                  {selectorPersona('Oración final', formCabecera.oracion_final_id, (e) => setFormCabecera({ ...formCabecera, oracion_final_id: e.target.value }))}
+                  <div className="flex gap-2">
+                    <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">Guardar</button>
+                    <button type="button" onClick={() => setCabeceraActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">Cancelar</button>
+                  </div>
+                </form>
+              )}
             </div>
 
             <div className="p-4 flex flex-col gap-5">
