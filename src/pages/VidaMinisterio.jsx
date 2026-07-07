@@ -79,35 +79,6 @@ function parsearPrograma(texto) {
   return { lecturaBiblia, partes }
 }
 
-// Arma un código de WOL "sugerido" a partir de una fecha de inicio (lunes),
-// usando el patrón de numeración de la Guía de Actividades:
-// 2020 + año(2) + [bimestre*80 + n°semana-en-el-bimestre*10 + 1]
-// Es sólo una sugerencia editable: JW no documenta este esquema oficialmente,
-// así que siempre conviene revisar el código antes de importar.
-function sugerirCodigoWOL(fechaInicioStr) {
-  if (!fechaInicioStr) return ''
-  const fecha = new Date(fechaInicioStr + 'T00:00')
-  if (Number.isNaN(fecha.getTime())) return ''
-
-  const anio = fecha.getFullYear()
-  const mes = fecha.getMonth() // 0-indexado
-  const bimestreIndex = Math.floor(mes / 2) // 0..5
-  const mesInicioBimestre = bimestreIndex * 2
-
-  let cursor = new Date(anio, mesInicioBimestre, 1)
-  while (cursor.getDay() !== 1) cursor.setDate(cursor.getDate() + 1) // primer lunes del bimestre
-
-  let n = 0
-  while (cursor < fecha) {
-    cursor.setDate(cursor.getDate() + 7)
-    n++
-  }
-
-  const anioCorto = String(anio).slice(-2)
-  const semana = bimestreIndex * 80 + n * 10 + 1
-  return `2020${anioCorto}${String(semana).padStart(3, '0')}`
-}
-
 export default function VidaMinisterio() {
   const { puedeEditar } = useAuth()
   const esEditorEscuela = puedeEditar('vida_ministerio_escuela')
@@ -132,11 +103,7 @@ export default function VidaMinisterio() {
   const [textoPegado, setTextoPegado] = useState('')
   const [mostrarPegado, setMostrarPegado] = useState(false)
   const [partesDetectadas, setPartesDetectadas] = useState([])
-
-  const [mostrarWOL, setMostrarWOL] = useState(false)
-  const [codigoWOL, setCodigoWOL] = useState('')
-  const [cargandoWOL, setCargandoWOL] = useState(false)
-  const [errorWOL, setErrorWOL] = useState('')
+  const [importandoWol, setImportandoWol] = useState(false)
 
   async function cargar() {
     setCargando(true)
@@ -186,34 +153,33 @@ export default function VidaMinisterio() {
     cargar()
   }
 
-  function interpretarTexto(texto = textoPegado) {
-    const { lecturaBiblia, partes } = parsearPrograma(texto)
+  function interpretarTexto() {
+    const { lecturaBiblia, partes } = parsearPrograma(textoPegado)
     if (lecturaBiblia) setFormSemana((f) => ({ ...f, lectura_biblia: lecturaBiblia }))
     setPartesDetectadas(partes)
   }
 
-  async function buscarEnWOL() {
-    setErrorWOL('')
-    if (!codigoWOL || !/^\d{9}$/.test(codigoWOL)) {
-      setErrorWOL('El código debe tener 9 dígitos (ej: 202026241).')
+  async function importarDeWol() {
+    if (!formSemana.fecha_inicio) {
+      alert('Elegí primero la fecha de inicio de la semana.')
       return
     }
-    setCargandoWOL(true)
+    setImportandoWol(true)
     try {
       const { data, error } = await supabase.functions.invoke('wol-importar', {
-        body: { codigo: codigoWOL, fecha_inicio: formSemana.fecha_inicio || null },
+        body: { fecha_inicio: formSemana.fecha_inicio },
       })
       if (error) throw error
       if (data?.error) throw new Error(data.error)
-
-      const texto = data.reunion.texto_normalizado || ''
-      setTextoPegado(texto)
+      setTextoPegado(data.texto || '')
       setMostrarPegado(true)
-      interpretarTexto(texto)
+      const { lecturaBiblia, partes } = parsearPrograma(data.texto || '')
+      if (lecturaBiblia) setFormSemana((f) => ({ ...f, lectura_biblia: lecturaBiblia }))
+      setPartesDetectadas(partes)
     } catch (err) {
-      setErrorWOL(err.message || 'No se pudo importar la reunión desde WOL.')
+      alert('No se pudo importar de WOL: ' + (err.message || err))
     } finally {
-      setCargandoWOL(false)
+      setImportandoWol(false)
     }
   }
 
@@ -332,6 +298,15 @@ export default function VidaMinisterio() {
               className="font-mono text-xs text-petrol hover:text-petrol-dark"
             >
               {mostrarPegado ? '− ocultar' : '+ pegar programa desde JW Library'}
+            </button>
+            {' '}
+            <button
+              type="button"
+              onClick={importarDeWol}
+              disabled={importandoWol}
+              className="font-mono text-xs text-gold hover:text-gold-dark disabled:opacity-50"
+            >
+              {importandoWol ? 'importando…' : '⇩ importar de WOL'}
             </button>
             {mostrarPegado && (
               <div className="mt-3 flex flex-col gap-2">
