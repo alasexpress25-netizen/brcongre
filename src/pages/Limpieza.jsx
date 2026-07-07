@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabaseClient'
+import { notificar } from '../lib/notificar'
 
 const vacio = { grupo_id: '', fecha_inicio: '', fecha_fin: '', notas: '' }
 
@@ -56,6 +57,17 @@ export default function Limpieza() {
     const payload = { ...form, grupo_id: form.grupo_id || null }
     if (editandoId) await supabase.from('turnos_limpieza').update(payload).eq('id', editandoId)
     else await supabase.from('turnos_limpieza').insert(payload)
+
+    if (payload.grupo_id) {
+      const { data: miembros } = await supabase.from('profiles').select('id').eq('grupo_id', payload.grupo_id).eq('aprobado', true)
+      const grupoNombre = grupos.find((g) => g.id === payload.grupo_id)?.nombre || 'tu grupo'
+      notificar(
+        miembros?.map((m) => m.id),
+        `Turno de limpieza asignado a ${grupoNombre}`,
+        `Le corresponde la limpieza del salón del ${new Date(payload.fecha_inicio + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} al ${new Date(payload.fecha_fin + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}.`
+      )
+    }
+
     setMostrarForm(false)
     setForm(vacio)
     setEditandoId(null)

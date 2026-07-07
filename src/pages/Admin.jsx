@@ -6,7 +6,9 @@ import { supabase } from '../lib/supabaseClient'
 const roles = ['publicador', 'siervo_ministerial', 'anciano', 'admin']
 const secciones = [
   { key: 'predicacion', label: 'Predicación' },
-  { key: 'vida_ministerio', label: 'Vida y Ministerio' },
+  { key: 'vida_ministerio_escuela', label: 'Vida y Ministerio: Escuela (Tesoros + Seamos Mejores Maestros)' },
+  { key: 'vida_ministerio_oraciones', label: 'Vida y Ministerio: Oraciones y discursos' },
+  { key: 'vida_ministerio_tareas', label: 'Vida y Ministerio: Tareas mecánicas' },
   { key: 'reunion_publica', label: 'Reunión Pública' },
   { key: 'limpieza', label: 'Limpieza' },
   { key: 'anuncios', label: 'Anuncios' },
