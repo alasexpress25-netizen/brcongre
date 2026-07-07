@@ -172,7 +172,6 @@ export default function VidaMinisterio() {
       if (error) throw error
       if (data?.error) throw new Error(data.error)
       setTextoPegado(data.texto || '')
-      setMostrarPegado(true)
       const { lecturaBiblia, partes } = parsearPrograma(data.texto || '')
       if (lecturaBiblia) setFormSemana((f) => ({ ...f, lectura_biblia: lecturaBiblia }))
       setPartesDetectadas(partes)
@@ -292,27 +291,43 @@ export default function VidaMinisterio() {
       {mostrarFormSemana && (
         <div className="mb-8 flex flex-col gap-3">
           <div className="border border-ink/10 rounded-lg bg-paper-dim p-4">
-            <button
-              type="button"
-              onClick={() => setMostrarPegado(!mostrarPegado)}
-              className="font-mono text-xs text-petrol hover:text-petrol-dark"
-            >
-              {mostrarPegado ? '− ocultar' : '+ pegar programa desde JW Library'}
-            </button>
-            {' '}
-            <button
-              type="button"
-              onClick={importarDeWol}
-              disabled={importandoWol}
-              className="font-mono text-xs text-gold hover:text-gold-dark disabled:opacity-50"
-            >
-              {importandoWol ? 'importando…' : '⇩ importar de WOL'}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={importarDeWol}
+                disabled={importandoWol || !formSemana.fecha_inicio}
+                className="font-mono text-xs bg-gold text-ink px-3 py-1.5 rounded-md hover:bg-gold-dark disabled:opacity-50"
+              >
+                {importandoWol ? 'importando…' : '⇩ importar programa de WOL'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMostrarPegado(!mostrarPegado)}
+                className="font-mono text-xs text-petrol hover:text-petrol-dark"
+              >
+                {mostrarPegado ? '− ocultar pegado manual' : 'pegar texto manualmente'}
+              </button>
+            </div>
+            {!formSemana.fecha_inicio && (
+              <p className="text-xs text-ink-soft mt-2">Elegí primero la fecha de inicio de la semana, abajo.</p>
+            )}
+            {partesDetectadas.length > 0 && (
+              <div className="mt-3 border border-gold/40 bg-gold-soft/10 rounded-md p-3">
+                <p className="font-mono text-xs text-gold mb-2">{partesDetectadas.length} partes detectadas — revisá antes de crear la semana:</p>
+                <ul className="text-sm flex flex-col gap-1">
+                  {partesDetectadas.map((p, i) => (
+                    <li key={i} className="text-ink-soft">
+                      <span className="text-ink">{p.titulo}</span> ({p.duracion_min} min) — {p.seccion}
+                      {p.es_lectura_biblia && ' · lectura de la Biblia'}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {mostrarPegado && (
               <div className="mt-3 flex flex-col gap-2">
                 <p className="text-xs text-ink-soft">
-                  Copiá el texto del programa de la semana (desde JW Library o tu propia app) y pegalo acá. Vamos a
-                  detectar los títulos y minutos automáticamente — vos revisás y asignás a las personas después.
+                  Solo si la importación automática falla: copiá el texto del programa y pegalo acá.
                 </p>
                 <textarea
                   value={textoPegado}
@@ -328,19 +343,6 @@ export default function VidaMinisterio() {
                 >
                   Interpretar texto
                 </button>
-                {partesDetectadas.length > 0 && (
-                  <div className="mt-2 border border-gold/40 bg-gold-soft/10 rounded-md p-3">
-                    <p className="font-mono text-xs text-gold mb-2">{partesDetectadas.length} partes detectadas:</p>
-                    <ul className="text-sm flex flex-col gap-1">
-                      {partesDetectadas.map((p, i) => (
-                        <li key={i} className="text-ink-soft">
-                          <span className="text-ink">{p.titulo}</span> ({p.duracion_min} min) — {p.seccion}
-                          {p.es_lectura_biblia && ' · lectura de la Biblia'}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             )}
           </div>
