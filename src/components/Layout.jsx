@@ -11,9 +11,7 @@ export default function Layout({ children }) {
       <header className="border-b border-ink/10 bg-petrol text-paper">
         <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-baseline gap-2 group">
-            <span className="font-display text-xl md:text-2xl font-semibold tracking-tight group-hover:text-gold-soft transition-colors">
-              {config?.nombre || 'Congregación'}
-            </span>
+            <span className="text-2xl group-hover:opacity-80 transition-opacity" title={config?.nombre || 'Inicio'}>🏠</span>
           </Link>
           <div className="font-mono text-xs text-paper/70 flex items-center gap-3">
             {session ? (
