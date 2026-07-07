@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient'
 import { notificar } from '../lib/notificar'
 
 const secciones = [
-  { key: 'tesoros', label: 'Tesoros de la Biblia', permiso: 'vida_ministerio_escuela' },
+  { key: 'tesoros', label: 'Tesoros de la Biblia', permiso: null },
   { key: 'ministerio', label: 'Seamos Mejores Maestros', permiso: 'vida_ministerio_escuela' },
   { key: 'vida_cristiana', label: 'Nuestra Vida Cristiana', permiso: 'vida_ministerio_oraciones' },
 ]
@@ -25,7 +25,7 @@ const tareasCampos = [
   { key: 'acomodador_audio_final_id', label: 'Acomodador aud. final' },
 ]
 
-const vacioParte = { seccion: 'tesoros', sala: '', titulo: '', duracion_min: '', asignado_id: '', ayudante_id: '', notas: '' }
+const vacioParte = { seccion: 'tesoros', sala: '', es_lectura_biblia: false, titulo: '', duracion_min: '', asignado_id: '', ayudante_id: '', notas: '' }
 const vacioSemana = { fecha_inicio: '', lectura_biblia: '', cantico_inicial: '', oracion_inicial_id: '', cantico_final: '', oracion_final_id: '', presidente_id: '' }
 
 function formatearRango(fechaInicio) {
@@ -101,8 +101,8 @@ export default function VidaMinisterio() {
     cargar()
   }
 
-  function nuevaParte(semanaId, seccionKey) {
-    setFormParte({ ...vacioParte, seccion: seccionKey })
+  function nuevaParte(semanaId, seccionKey, esLectura = false) {
+    setFormParte({ ...vacioParte, seccion: seccionKey, es_lectura_biblia: esLectura })
     setSemanaActivaId(semanaId)
     setEditandoParteId(null)
   }
@@ -111,6 +111,7 @@ export default function VidaMinisterio() {
     setFormParte({
       seccion: p.seccion,
       sala: p.sala || '',
+      es_lectura_biblia: p.es_lectura_biblia || false,
       titulo: p.titulo,
       duracion_min: p.duracion_min || '',
       asignado_id: p.asignado_id || '',
@@ -128,6 +129,7 @@ export default function VidaMinisterio() {
       ...formParte,
       semana_id: semanaActivaId,
       sala: formParte.seccion === 'ministerio' ? formParte.sala || null : null,
+      es_lectura_biblia: formParte.seccion === 'tesoros' ? formParte.es_lectura_biblia : false,
       duracion_min: formParte.duracion_min ? Number(formParte.duracion_min) : null,
       asignado_id: formParte.asignado_id || null,
       ayudante_id: formParte.ayudante_id || null,
@@ -275,7 +277,8 @@ export default function VidaMinisterio() {
 
             <div className="p-4 flex flex-col gap-5">
               {secciones.map((s) => {
-                const puedeEditarSeccion = puedeEditar(s.permiso)
+                const esTesoros = s.key === 'tesoros'
+                const puedeEditarSeccion = esTesoros ? (esEditorEscuela || esEditorOraciones) : puedeEditar(s.permiso)
                 const partesSeccion = semana.partes_vida_ministerio.filter((p) => p.seccion === s.key)
                 const salaA = partesSeccion.filter((p) => p.sala === 'A')
                 const salaB = partesSeccion.filter((p) => p.sala === 'B')
@@ -285,15 +288,35 @@ export default function VidaMinisterio() {
                   <div key={s.key}>
                     <div className="flex items-center justify-between mb-2">
                       <h2 className="font-mono text-xs uppercase tracking-wider text-petrol">{s.label}</h2>
-                      {puedeEditarSeccion && (
-                        <button onClick={() => nuevaParte(semana.id, s.key)} className="font-mono text-xs text-ink-soft hover:text-petrol">
-                          + parte
-                        </button>
+                      {esTesoros ? (
+                        <div className="flex gap-3">
+                          {esEditorOraciones && (
+                            <button onClick={() => nuevaParte(semana.id, 'tesoros', false)} className="font-mono text-xs text-ink-soft hover:text-petrol">
+                              + discurso
+                            </button>
+                          )}
+                          {esEditorEscuela && (
+                            <button onClick={() => nuevaParte(semana.id, 'tesoros', true)} className="font-mono text-xs text-ink-soft hover:text-petrol">
+                              + lectura de la Biblia
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        puedeEditarSeccion && (
+                          <button onClick={() => nuevaParte(semana.id, s.key)} className="font-mono text-xs text-ink-soft hover:text-petrol">
+                            + parte
+                          </button>
+                        )
                       )}
                     </div>
 
                     {semanaActivaId === semana.id && formParte.seccion === s.key && (
                       <form onSubmit={guardarParte} className="mb-3 border border-ink/10 rounded-lg bg-paper p-3 flex flex-col gap-2">
+                        {esTesoros && (
+                          <p className="font-mono text-[10px] uppercase text-gold">
+                            {formParte.es_lectura_biblia ? 'Lectura de la Biblia' : 'Discurso de Tesoros'}
+                          </p>
+                        )}
                         <input
                           required
                           placeholder="Título de la parte"
@@ -348,6 +371,14 @@ export default function VidaMinisterio() {
                           </div>
                         )}
                       </div>
+                    ) : esTesoros ? (
+                      <PartesLista
+                        partes={partesSeccion}
+                        esEditor={true}
+                        puedeEditarParte={(p) => (p.es_lectura_biblia ? esEditorEscuela : esEditorOraciones)}
+                        onEditar={(p) => editarParte(semana.id, p)}
+                        onEliminar={eliminarParte}
+                      />
                     ) : (
                       <PartesLista partes={partesSeccion} esEditor={puedeEditarSeccion} onEditar={(p) => editarParte(semana.id, p)} onEliminar={eliminarParte} />
                     )}
@@ -415,31 +446,34 @@ export default function VidaMinisterio() {
   )
 }
 
-function PartesLista({ partes, esEditor, onEditar, onEliminar }) {
+function PartesLista({ partes, esEditor, puedeEditarParte, onEditar, onEliminar }) {
   return (
     <div className="flex flex-col gap-2">
-      {partes.map((p) => (
-        <div key={p.id} className="border border-ink/10 rounded-lg bg-white p-3 flex items-start justify-between gap-3">
-          <div>
-            <p className="font-medium text-sm">
-              {p.titulo} {p.duracion_min && <span className="text-ink-soft font-normal">({p.duracion_min} min)</span>}
-            </p>
-            {(p.asignado?.nombre || p.ayudante?.nombre) && (
-              <p className="text-xs text-ink-soft mt-0.5">
-                {p.asignado?.nombre}
-                {p.ayudante?.nombre && ` · ${p.ayudante.nombre}`}
+      {partes.map((p) => {
+        const mostrarBotones = puedeEditarParte ? puedeEditarParte(p) : esEditor
+        return (
+          <div key={p.id} className="border border-ink/10 rounded-lg bg-white p-3 flex items-start justify-between gap-3">
+            <div>
+              <p className="font-medium text-sm">
+                {p.titulo} {p.duracion_min && <span className="text-ink-soft font-normal">({p.duracion_min} min)</span>}
               </p>
-            )}
-            {p.notas && <p className="text-xs text-ink-soft mt-0.5">{p.notas}</p>}
-          </div>
-          {esEditor && (
-            <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0">
-              <button onClick={() => onEditar(p)} className="hover:text-petrol">editar</button>
-              <button onClick={() => onEliminar(p.id)} className="hover:text-clay">borrar</button>
+              {(p.asignado?.nombre || p.ayudante?.nombre) && (
+                <p className="text-xs text-ink-soft mt-0.5">
+                  {p.asignado?.nombre}
+                  {p.ayudante?.nombre && ` · ${p.ayudante.nombre}`}
+                </p>
+              )}
+              {p.notas && <p className="text-xs text-ink-soft mt-0.5">{p.notas}</p>}
             </div>
-          )}
-        </div>
-      ))}
+            {mostrarBotones && (
+              <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0">
+                <button onClick={() => onEditar(p)} className="hover:text-petrol">editar</button>
+                <button onClick={() => onEliminar(p.id)} className="hover:text-clay">borrar</button>
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
