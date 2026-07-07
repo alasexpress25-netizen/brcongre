@@ -383,7 +383,7 @@ export default function VidaMinisterio() {
         {semanas.map((semana) => (
           <div key={semana.id} className="border border-ink/10 rounded-lg bg-white overflow-hidden">
             <div className="bg-paper-dim px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-              <div>
+              <div className="flex flex-wrap items-center gap-3">
                 <p className="font-display font-semibold">{formatearRango(semana.fecha_inicio)}</p>
                 {semana.lectura_biblia && <p className="font-mono text-xs text-ink-soft uppercase">{semana.lectura_biblia}</p>}
               </div>
@@ -407,30 +407,10 @@ export default function VidaMinisterio() {
                   <div key={s.key}>
                     <div className="flex items-center justify-between mb-2">
                       <h2 className={`font-mono text-xs uppercase tracking-wider ${s.color}`}>{s.icono} {s.label}</h2>
-                      {esTesoros ? (
-                        <div className="flex gap-3">
-                          {esEditorOraciones && (
-                            <>
-                              <button onClick={() => nuevaParte(semana.id, 'tesoros', false)} className="font-mono text-xs text-ink-soft hover:text-petrol">
-                                + discurso
-                              </button>
-                              <button onClick={() => nuevaParte(semana.id, 'tesoros', false, 'Busquemos perlas escondidas')} className="font-mono text-xs text-ink-soft hover:text-petrol">
-                                + perlas escondidas
-                              </button>
-                            </>
-                          )}
-                          {esEditorEscuela && (
-                            <button onClick={() => nuevaParte(semana.id, 'tesoros', true, 'Lectura de la Biblia')} className="font-mono text-xs text-ink-soft hover:text-petrol">
-                              + lectura de la Biblia
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        puedeEditarSeccion && (
-                          <button onClick={() => nuevaParte(semana.id, s.key)} className="font-mono text-xs text-ink-soft hover:text-petrol">
-                            + parte
-                          </button>
-                        )
+                      {!esTesoros && puedeEditarSeccion && (
+                        <button onClick={() => nuevaParte(semana.id, s.key)} className="font-mono text-xs text-ink-soft hover:text-petrol">
+                          + parte
+                        </button>
                       )}
                     </div>
 
