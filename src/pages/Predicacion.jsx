@@ -3,7 +3,7 @@ import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 
-const vacioSalida = { grupo_id: '', fecha: '', hora: '', punto_encuentro: '', notas: '' }
+const vacioSalida = { grupo_id: '', fecha: '', hora: '', punto_encuentro: '', encargado_id: '', notas: '' }
 
 function formatearFecha(f) {
   return new Date(f + 'T00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' })
@@ -13,6 +13,7 @@ export default function Predicacion() {
   const { puedeEditar, esAdmin } = useAuth()
   const esEditor = puedeEditar('predicacion')
   const [grupos, setGrupos] = useState([])
+  const [publicadores, setPublicadores] = useState([])
   const [salidas, setSalidas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [form, setForm] = useState(vacioSalida)
@@ -22,15 +23,17 @@ export default function Predicacion() {
 
   async function cargar() {
     setCargando(true)
-    const [{ data: g }, { data: s }] = await Promise.all([
+    const [{ data: g }, { data: p }, { data: s }] = await Promise.all([
       supabase.from('grupos').select('*').order('nombre'),
+      supabase.from('profiles').select('id, nombre').order('nombre'),
       supabase
         .from('salidas_predicacion')
-        .select('*, grupos(nombre)')
+        .select('*, grupos(nombre), profiles!salidas_predicacion_encargado_id_fkey(nombre)')
         .gte('fecha', new Date().toISOString().slice(0, 10))
         .order('fecha', { ascending: true }),
     ])
     setGrupos(g || [])
+    setPublicadores(p || [])
     setSalidas(s || [])
     setCargando(false)
   }
@@ -53,6 +56,7 @@ export default function Predicacion() {
       fecha: s.fecha,
       hora: s.hora || '',
       punto_encuentro: s.punto_encuentro || '',
+      encargado_id: s.encargado_id || '',
       notas: s.notas || '',
     })
     setEditandoId(s.id)
@@ -67,7 +71,7 @@ export default function Predicacion() {
 
   async function guardar(e) {
     e.preventDefault()
-    const payload = { ...form, grupo_id: form.grupo_id || null }
+    const payload = { ...form, grupo_id: form.grupo_id || null, encargado_id: form.encargado_id || null }
     if (editandoId) await supabase.from('salidas_predicacion').update(payload).eq('id', editandoId)
     else await supabase.from('salidas_predicacion').insert(payload)
     setMostrarForm(false)
@@ -146,6 +150,16 @@ export default function Predicacion() {
             onChange={(e) => setForm({ ...form, punto_encuentro: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
           />
+          <select
+            value={form.encargado_id}
+            onChange={(e) => setForm({ ...form, encargado_id: e.target.value })}
+            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
+          >
+            <option value="">Sin conductor asignado</option>
+            {publicadores.map((p) => (
+              <option key={p.id} value={p.id}>{p.nombre}</option>
+            ))}
+          </select>
           <textarea
             placeholder="Notas"
             value={form.notas}
@@ -185,6 +199,7 @@ export default function Predicacion() {
               )}
             </div>
             {s.punto_encuentro && <p className="text-sm text-ink-soft mt-1">📍 {s.punto_encuentro}</p>}
+            {s.profiles?.nombre && <p className="text-sm text-ink-soft mt-1">🚗 Conductor: {s.profiles.nombre}</p>}
             {s.notas && <p className="text-sm text-ink-soft mt-1">{s.notas}</p>}
           </div>
         ))}
