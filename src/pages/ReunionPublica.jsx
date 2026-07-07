@@ -2,30 +2,64 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabaseClient'
+import { notificar } from '../lib/notificar'
 
-const vacio = { fecha: '', tema: '', orador_nombre: '', congregacion_visitante: '', notas: '' }
+const vacio = {
+  fecha: '', numero_discurso: '', tema: '', orador_nombre: '', orador_id: '', oradorEsPropio: false,
+  congregacion_visitante: '', presidente_id: '', conductor_atalaya_id: '', lector_id: '', notas: '',
+}
+
+const tareasCampos = [
+  { key: 'audio_id', label: 'Audio' },
+  { key: 'video_id', label: 'Video' },
+  { key: 'microfono1_inicio_id', label: 'Micrófono 1 inicio' },
+  { key: 'microfono2_inicio_id', label: 'Micrófono 2 inicio' },
+  { key: 'microfono1_final_id', label: 'Micrófono 1 final' },
+  { key: 'microfono2_final_id', label: 'Micrófono 2 final' },
+  { key: 'plataforma_inicio_id', label: 'Plataforma inicio' },
+  { key: 'plataforma_final_id', label: 'Plataforma final' },
+  { key: 'acomodador_entrada1_id', label: 'Acomodador entrada 1' },
+  { key: 'acomodador_entrada2_id', label: 'Acomodador entrada 2' },
+  { key: 'acomodador_audio_inicio_id', label: 'Acomodador aud. inicio' },
+  { key: 'acomodador_audio_final_id', label: 'Acomodador aud. final' },
+]
 
 function formatearFecha(f) {
   return new Date(f + 'T00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
+function NombreOFranja({ nombre }) {
+  if (nombre) return <span>{nombre}</span>
+  return <span className="inline-block w-24 h-3.5 rounded bg-ink/10 align-middle" title="Sin asignar" />
+}
+
 export default function ReunionPublica() {
   const { puedeEditar } = useAuth()
   const esEditor = puedeEditar('reunion_publica')
+  const esEditorTareas = puedeEditar('vida_ministerio_tareas')
+
   const [reuniones, setReuniones] = useState([])
+  const [personas, setPersonas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [form, setForm] = useState(vacio)
   const [editandoId, setEditandoId] = useState(null)
   const [mostrarForm, setMostrarForm] = useState(false)
 
+  const [formTareas, setFormTareas] = useState(null)
+  const [reunionTareasActivaId, setReunionTareasActivaId] = useState(null)
+
   async function cargar() {
     setCargando(true)
-    const { data } = await supabase
-      .from('reuniones_publicas')
-      .select('*')
-      .gte('fecha', new Date().toISOString().slice(0, 10))
-      .order('fecha', { ascending: true })
-    setReuniones(data || [])
+    const [{ data: r }, { data: p }] = await Promise.all([
+      supabase
+        .from('reuniones_publicas')
+        .select('*, presidente:presidente_id(nombre), conductor_atalaya:conductor_atalaya_id(nombre), lector:lector_id(nombre), orador:orador_id(nombre), tareas_mecanicas_reunion_publica(*)')
+        .gte('fecha', new Date().toISOString().slice(0, 10))
+        .order('fecha', { ascending: true }),
+      supabase.from('profiles').select('id, nombre').order('nombre'),
+    ])
+    setReuniones(r || [])
+    setPersonas(p || [])
     setCargando(false)
   }
 
@@ -36,9 +70,15 @@ export default function ReunionPublica() {
   function editar(r) {
     setForm({
       fecha: r.fecha,
+      numero_discurso: r.numero_discurso || '',
       tema: r.tema || '',
       orador_nombre: r.orador_nombre || '',
+      orador_id: r.orador_id || '',
+      oradorEsPropio: !!r.orador_id,
       congregacion_visitante: r.congregacion_visitante || '',
+      presidente_id: r.presidente_id || '',
+      conductor_atalaya_id: r.conductor_atalaya_id || '',
+      lector_id: r.lector_id || '',
       notas: r.notas || '',
     })
     setEditandoId(r.id)
@@ -53,8 +93,23 @@ export default function ReunionPublica() {
 
   async function guardar(e) {
     e.preventDefault()
-    if (editandoId) await supabase.from('reuniones_publicas').update(form).eq('id', editandoId)
-    else await supabase.from('reuniones_publicas').insert(form)
+    const payload = { ...form }
+    delete payload.oradorEsPropio
+    if (form.oradorEsPropio) {
+      payload.orador_nombre = null
+    } else {
+      payload.orador_id = null
+    }
+    Object.keys(payload).forEach((k) => { if (payload[k] === '') payload[k] = null })
+    if (editandoId) await supabase.from('reuniones_publicas').update(payload).eq('id', editandoId)
+    else await supabase.from('reuniones_publicas').insert(payload)
+
+    const fechaTexto = formatearFecha(payload.fecha)
+    if (payload.orador_id) notificar([payload.orador_id], 'Te asignaron el discurso público', `Tenés el discurso "${payload.tema || ''}" del ${fechaTexto}.`)
+    if (payload.presidente_id) notificar([payload.presidente_id], 'Te asignaron presidir la Reunión Pública', `Presidís la Reunión Pública del ${fechaTexto}.`)
+    if (payload.conductor_atalaya_id) notificar([payload.conductor_atalaya_id], 'Te asignaron conducir La Atalaya', `Conducís La Atalaya del ${fechaTexto}.`)
+    if (payload.lector_id) notificar([payload.lector_id], 'Te asignaron la lectura de La Atalaya', `Tenés la lectura de La Atalaya del ${fechaTexto}.`)
+
     setMostrarForm(false)
     setForm(vacio)
     setEditandoId(null)
@@ -66,6 +121,39 @@ export default function ReunionPublica() {
     await supabase.from('reuniones_publicas').delete().eq('id', id)
     cargar()
   }
+
+  function abrirTareas(reunion) {
+    const actuales = reunion.tareas_mecanicas_reunion_publica || {}
+    const f = {}
+    tareasCampos.forEach((c) => { f[c.key] = actuales[c.key] || '' })
+    setFormTareas(f)
+    setReunionTareasActivaId(reunion.id)
+  }
+
+  async function guardarTareas(e) {
+    e.preventDefault()
+    const reunion = reuniones.find((r) => r.id === reunionTareasActivaId)
+    const payload = { reunion_id: reunionTareasActivaId }
+    tareasCampos.forEach((c) => { payload[c.key] = formTareas[c.key] || null })
+    await supabase.from('tareas_mecanicas_reunion_publica').upsert(payload)
+
+    const fechaTexto = formatearFecha(reunion.fecha)
+    tareasCampos.forEach((c) => {
+      if (payload[c.key]) notificar([payload[c.key]], `Tarea asignada: ${c.label}`, `Tenés la tarea "${c.label}" el ${fechaTexto} en la Reunión Pública.`)
+    })
+
+    setReunionTareasActivaId(null)
+    cargar()
+  }
+
+  const selectorPersona = (label, value, onChange) => (
+    <select value={value} onChange={onChange} className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol">
+      <option value="">{label}</option>
+      {personas.map((p) => (
+        <option key={p.id} value={p.id}>{p.nombre}</option>
+      ))}
+    </select>
+  )
 
   return (
     <Layout>
@@ -80,45 +168,44 @@ export default function ReunionPublica() {
 
       {mostrarForm && (
         <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
-          <input
-            required
-            type="date"
-            value={form.fecha}
-            onChange={(e) => setForm({ ...form, fecha: e.target.value })}
-            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
-          />
-          <input
-            placeholder="Tema del discurso"
-            value={form.tema}
-            onChange={(e) => setForm({ ...form, tema: e.target.value })}
-            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
-          />
-          <input
-            placeholder="Orador"
-            value={form.orador_nombre}
-            onChange={(e) => setForm({ ...form, orador_nombre: e.target.value })}
-            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
-          />
-          <input
-            placeholder="Congregación visitante (si aplica)"
-            value={form.congregacion_visitante}
-            onChange={(e) => setForm({ ...form, congregacion_visitante: e.target.value })}
-            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
-          />
-          <textarea
-            placeholder="Notas (presidente, conductor de Atalaya, lector)"
-            value={form.notas}
-            onChange={(e) => setForm({ ...form, notas: e.target.value })}
-            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
-            rows={2}
-          />
+          <div className="flex gap-3">
+            <input required type="date" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+              className="flex-1 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
+            <input placeholder="N° discurso (ej: 25)" value={form.numero_discurso} onChange={(e) => setForm({ ...form, numero_discurso: e.target.value })}
+              className="w-40 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
+          </div>
+          <input placeholder="Tema del discurso" value={form.tema} onChange={(e) => setForm({ ...form, tema: e.target.value })}
+            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-sm text-ink-soft">
+              <input
+                type="checkbox"
+                checked={form.oradorEsPropio}
+                onChange={(e) => setForm({ ...form, oradorEsPropio: e.target.checked })}
+              />
+              El orador es de esta congregación
+            </label>
+            <div className="flex gap-3">
+              {form.oradorEsPropio ? (
+                selectorPersona('Orador', form.orador_id, (e) => setForm({ ...form, orador_id: e.target.value }))
+              ) : (
+                <input placeholder="Orador (nombre)" value={form.orador_nombre} onChange={(e) => setForm({ ...form, orador_nombre: e.target.value })}
+                  className="flex-1 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
+              )}
+            </div>
+          </div>
+          <input placeholder="Congregación visitante (si aplica)" value={form.congregacion_visitante} onChange={(e) => setForm({ ...form, congregacion_visitante: e.target.value })}
+            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
+          <div className="flex gap-3">
+            {selectorPersona('Presidente', form.presidente_id, (e) => setForm({ ...form, presidente_id: e.target.value }))}
+            {selectorPersona('Conductor de La Atalaya', form.conductor_atalaya_id, (e) => setForm({ ...form, conductor_atalaya_id: e.target.value }))}
+            {selectorPersona('Lector', form.lector_id, (e) => setForm({ ...form, lector_id: e.target.value }))}
+          </div>
+          <textarea placeholder="Notas" value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })}
+            className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" rows={2} />
           <div className="flex gap-2">
-            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
-              Guardar
-            </button>
-            <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">
-              Cancelar
-            </button>
+            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">Guardar</button>
+            <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">Cancelar</button>
           </div>
         </form>
       )}
@@ -126,12 +213,14 @@ export default function ReunionPublica() {
       {cargando && <p className="text-ink-soft text-sm">Cargando…</p>}
       {!cargando && reuniones.length === 0 && <p className="text-ink-soft text-sm">No hay reuniones públicas cargadas.</p>}
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {reuniones.map((r) => (
           <div key={r.id} className="border border-ink/10 rounded-lg bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-display text-lg font-semibold">{r.tema || 'Tema a confirmar'}</h3>
+                <h3 className="font-display text-lg font-semibold">
+                  {r.tema || 'Tema a confirmar'} {r.numero_discurso && <span className="font-mono text-xs text-ink-soft">[{r.numero_discurso}]</span>}
+                </h3>
                 <p className="font-mono text-xs text-gold mt-0.5">{formatearFecha(r.fecha)}</p>
               </div>
               {esEditor && (
@@ -141,13 +230,56 @@ export default function ReunionPublica() {
                 </div>
               )}
             </div>
-            {r.orador_nombre && (
-              <p className="text-sm text-ink-soft mt-1">
-                🎙️ {r.orador_nombre}
-                {r.congregacion_visitante && ` — ${r.congregacion_visitante}`}
-              </p>
-            )}
-            {r.notas && <p className="text-sm text-ink-soft mt-1">{r.notas}</p>}
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3 font-mono text-xs">
+              <div><p className="text-ink-soft">Orador</p><p className="text-ink text-sm">{r.orador?.nombre || r.orador_nombre || '—'}{r.congregacion_visitante && ` (${r.congregacion_visitante})`}</p></div>
+              <div><p className="text-ink-soft">Presidente</p><p className="text-sm"><NombreOFranja nombre={r.presidente?.nombre} /></p></div>
+              <div><p className="text-ink-soft">Conductor Atalaya</p><p className="text-sm"><NombreOFranja nombre={r.conductor_atalaya?.nombre} /></p></div>
+              <div><p className="text-ink-soft">Lector</p><p className="text-sm"><NombreOFranja nombre={r.lector?.nombre} /></p></div>
+            </div>
+
+            {r.notas && <p className="text-sm text-ink-soft mt-2">{r.notas}</p>}
+
+            <div className="border-t border-ink/10 mt-4 pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-petrol">Tareas mecánicas</h4>
+                {esEditorTareas && (
+                  <button onClick={() => abrirTareas(r)} className="font-mono text-xs text-ink-soft hover:text-petrol">
+                    {r.tareas_mecanicas_reunion_publica ? 'editar' : '+ cargar'}
+                  </button>
+                )}
+              </div>
+
+              {reunionTareasActivaId === r.id ? (
+                <form onSubmit={guardarTareas} className="border border-ink/10 rounded-lg bg-paper p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {tareasCampos.map((c) => (
+                    <div key={c.key}>
+                      <label className="text-[10px] font-mono uppercase text-ink-soft">{c.label}</label>
+                      <select value={formTareas[c.key]} onChange={(e) => setFormTareas({ ...formTareas, [c.key]: e.target.value })}
+                        className="w-full border border-ink/15 rounded-md px-2 py-1 text-xs">
+                        <option value="">—</option>
+                        {personas.map((p) => (<option key={p.id} value={p.id}>{p.nombre}</option>))}
+                      </select>
+                    </div>
+                  ))}
+                  <div className="col-span-2 sm:col-span-3 flex gap-2 mt-2">
+                    <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">Guardar</button>
+                    <button type="button" onClick={() => setReunionTareasActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">Cancelar</button>
+                  </div>
+                </form>
+              ) : r.tareas_mecanicas_reunion_publica ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {tareasCampos.map((c) => (
+                    <div key={c.key} className="border border-ink/10 rounded-md p-2">
+                      <p className="text-[10px] font-mono uppercase text-ink-soft">{c.label}</p>
+                      <p className="text-sm"><NombreOFranja nombre={personas.find((p) => p.id === r.tareas_mecanicas_reunion_publica[c.key])?.nombre} /></p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-ink-soft/70">Sin tareas cargadas.</p>
+              )}
+            </div>
           </div>
         ))}
       </div>
