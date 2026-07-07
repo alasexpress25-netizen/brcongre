@@ -44,6 +44,14 @@ function lunesActual() {
   return lunes.toISOString().slice(0, 10)
 }
 
+const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
+
+function esFechaCabecera(mayus) {
+  // Detecta encabezados tipo "6-12 DE JULIO" o "29 DE JUNIO A 5 DE JULIO"
+  // para no confundirlos con la cita de la lectura bíblica (ej: "JEREMÍAS 13-15").
+  return MESES.some((m) => mayus.includes(m))
+}
+
 function parsearPrograma(texto) {
   const lineas = texto.split('\n').map((l) => l.trim()).filter(Boolean)
   let lecturaBiblia = ''
@@ -55,6 +63,7 @@ function parsearPrograma(texto) {
     if (mayus.includes('TESOROS')) { seccionActual = 'tesoros'; continue }
     if (mayus.includes('SEAMOS MEJORES MAESTROS')) { seccionActual = 'ministerio'; continue }
     if (mayus.includes('NUESTRA VIDA CRISTIANA')) { seccionActual = 'vida_cristiana'; continue }
+    if (esFechaCabecera(mayus)) continue
     if (/^[A-ZÁÉÍÓÚÑ0-9,\s-]+$/.test(linea) && linea.length < 40 && !/^\d+\./.test(linea)) {
       if (!lecturaBiblia) lecturaBiblia = linea
       continue
@@ -100,8 +109,6 @@ export default function VidaMinisterio() {
   const [formTareas, setFormTareas] = useState(null)
   const [semanaTareasActivaId, setSemanaTareasActivaId] = useState(null)
 
-  const [textoPegado, setTextoPegado] = useState('')
-  const [mostrarPegado, setMostrarPegado] = useState(false)
   const [partesDetectadas, setPartesDetectadas] = useState([])
   const [importandoWol, setImportandoWol] = useState(false)
 
@@ -149,14 +156,7 @@ export default function VidaMinisterio() {
     setMostrarFormSemana(false)
     setFormSemana(vacioSemana)
     setPartesDetectadas([])
-    setTextoPegado('')
     cargar()
-  }
-
-  function interpretarTexto() {
-    const { lecturaBiblia, partes } = parsearPrograma(textoPegado)
-    if (lecturaBiblia) setFormSemana((f) => ({ ...f, lectura_biblia: lecturaBiblia }))
-    setPartesDetectadas(partes)
   }
 
   async function importarDeWol() {
@@ -171,9 +171,13 @@ export default function VidaMinisterio() {
       })
       if (error) throw error
       if (data?.error) throw new Error(data.error)
-      setTextoPegado(data.texto || '')
       const { lecturaBiblia, partes } = parsearPrograma(data.texto || '')
-      if (lecturaBiblia) setFormSemana((f) => ({ ...f, lectura_biblia: lecturaBiblia }))
+      setFormSemana((f) => ({
+        ...f,
+        ...(lecturaBiblia ? { lectura_biblia: lecturaBiblia } : {}),
+        ...(data.cantico_inicial ? { cantico_inicial: data.cantico_inicial } : {}),
+        ...(data.cantico_final ? { cantico_final: data.cantico_final } : {}),
+      }))
       setPartesDetectadas(partes)
     } catch (err) {
       alert('No se pudo importar de WOL: ' + (err.message || err))
@@ -300,16 +304,12 @@ export default function VidaMinisterio() {
               >
                 {importandoWol ? 'importando…' : '⇩ importar programa de WOL'}
               </button>
-              <button
-                type="button"
-                onClick={() => setMostrarPegado(!mostrarPegado)}
-                className="font-mono text-xs text-petrol hover:text-petrol-dark"
-              >
-                {mostrarPegado ? '− ocultar pegado manual' : 'pegar texto manualmente'}
-              </button>
             </div>
             {!formSemana.fecha_inicio && (
               <p className="text-xs text-ink-soft mt-2">Elegí primero la fecha de inicio de la semana, abajo.</p>
+            )}
+            {formSemana.fecha_inicio && (
+              <p className="text-xs text-ink-soft mt-2">Trae la lectura bíblica, los cánticos inicial y final, y las partes detectadas. Presidente y oraciones quedan en blanco porque son asignaciones a personas.</p>
             )}
             {partesDetectadas.length > 0 && (
               <div className="mt-3 border border-gold/40 bg-gold-soft/10 rounded-md p-3">
@@ -322,27 +322,6 @@ export default function VidaMinisterio() {
                     </li>
                   ))}
                 </ul>
-              </div>
-            )}
-            {mostrarPegado && (
-              <div className="mt-3 flex flex-col gap-2">
-                <p className="text-xs text-ink-soft">
-                  Solo si la importación automática falla: copiá el texto del programa y pegalo acá.
-                </p>
-                <textarea
-                  value={textoPegado}
-                  onChange={(e) => setTextoPegado(e.target.value)}
-                  rows={6}
-                  placeholder={'Pegá acá el texto del programa semanal…'}
-                  className="border border-ink/15 rounded-md px-3 py-2 text-sm font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={interpretarTexto}
-                  className="self-start bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark"
-                >
-                  Interpretar texto
-                </button>
               </div>
             )}
           </div>
@@ -391,8 +370,8 @@ export default function VidaMinisterio() {
             </>
           )}
           <div className="flex gap-2">
-            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">Guardar</button>
-            <button type="button" onClick={() => { setMostrarFormSemana(false); setPartesDetectadas([]); setTextoPegado('') }} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">Cancelar</button>
+            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">Crear semana</button>
+            <button type="button" onClick={() => { setMostrarFormSemana(false); setPartesDetectadas([]) }} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">Cancelar</button>
           </div>
           </form>
         </div>
