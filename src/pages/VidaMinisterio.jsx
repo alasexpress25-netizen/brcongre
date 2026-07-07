@@ -5,9 +5,9 @@ import { supabase } from '../lib/supabaseClient'
 import { notificar } from '../lib/notificar'
 
 const secciones = [
-  { key: 'tesoros', label: 'Tesoros de la Biblia', permiso: null },
-  { key: 'ministerio', label: 'Seamos Mejores Maestros', permiso: 'vida_ministerio_escuela' },
-  { key: 'vida_cristiana', label: 'Nuestra Vida Cristiana', permiso: 'vida_ministerio_oraciones' },
+  { key: 'tesoros', label: 'Tesoros de la Biblia', permiso: null, color: 'text-teal-700', icono: '💎' },
+  { key: 'ministerio', label: 'Seamos Mejores Maestros', permiso: 'vida_ministerio_escuela', color: 'text-amber-700', icono: '🛡️' },
+  { key: 'vida_cristiana', label: 'Nuestra Vida Cristiana', permiso: 'vida_ministerio_oraciones', color: 'text-red-700', icono: '🏛️' },
 ]
 
 const tareasCampos = [
@@ -44,6 +44,41 @@ function lunesActual() {
   return lunes.toISOString().slice(0, 10)
 }
 
+function parsearPrograma(texto) {
+  const lineas = texto.split('\n').map((l) => l.trim()).filter(Boolean)
+  let lecturaBiblia = ''
+  const partes = []
+  let seccionActual = 'tesoros'
+
+  for (const linea of lineas) {
+    const mayus = linea.toUpperCase()
+    if (mayus.includes('TESOROS')) { seccionActual = 'tesoros'; continue }
+    if (mayus.includes('SEAMOS MEJORES MAESTROS')) { seccionActual = 'ministerio'; continue }
+    if (mayus.includes('NUESTRA VIDA CRISTIANA')) { seccionActual = 'vida_cristiana'; continue }
+    if (/^[A-ZÁÉÍÓÚÑ0-9,\s-]+$/.test(linea) && linea.length < 40 && !/^\d+\./.test(linea)) {
+      if (!lecturaBiblia) lecturaBiblia = linea
+      continue
+    }
+
+    const match = linea.match(/^\d+\.\s*[""]?(.+?)[""]?\s*\((\d+)\s*mins?\.?\)(.*)$/i)
+    if (match) {
+      const titulo = match[1].trim()
+      const duracion = Number(match[2])
+      const resto = match[3].trim()
+      const esLectura = /lectura de la biblia/i.test(titulo)
+      partes.push({
+        seccion: esLectura ? 'tesoros' : seccionActual,
+        es_lectura_biblia: esLectura,
+        titulo,
+        duracion_min: duracion,
+        notas: resto || '',
+      })
+    }
+  }
+
+  return { lecturaBiblia, partes }
+}
+
 export default function VidaMinisterio() {
   const { puedeEditar } = useAuth()
   const esEditorEscuela = puedeEditar('vida_ministerio_escuela')
@@ -64,6 +99,10 @@ export default function VidaMinisterio() {
 
   const [formTareas, setFormTareas] = useState(null)
   const [semanaTareasActivaId, setSemanaTareasActivaId] = useState(null)
+
+  const [textoPegado, setTextoPegado] = useState('')
+  const [mostrarPegado, setMostrarPegado] = useState(false)
+  const [partesDetectadas, setPartesDetectadas] = useState([])
 
   async function cargar() {
     setCargando(true)
@@ -89,7 +128,17 @@ export default function VidaMinisterio() {
     e.preventDefault()
     const payload = { ...formSemana }
     Object.keys(payload).forEach((k) => { if (payload[k] === '') payload[k] = null })
-    await supabase.from('semanas_vida_ministerio').insert(payload)
+    const { data: nuevaSemana } = await supabase.from('semanas_vida_ministerio').insert(payload).select().single()
+
+    if (nuevaSemana && partesDetectadas.length > 0) {
+      const conteo = {}
+      const partesPayload = partesDetectadas.map((p) => {
+        conteo[p.seccion] = (conteo[p.seccion] || 0)
+        const orden = conteo[p.seccion]++
+        return { ...p, semana_id: nuevaSemana.id, orden }
+      })
+      await supabase.from('partes_vida_ministerio').insert(partesPayload)
+    }
 
     const fechaTexto = new Date(payload.fecha_inicio + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
     if (payload.presidente_id) notificar([payload.presidente_id], 'Te asignaron presidir Vida y Ministerio', `Vas a presidir el programa del ${fechaTexto}.`)
@@ -98,11 +147,19 @@ export default function VidaMinisterio() {
 
     setMostrarFormSemana(false)
     setFormSemana(vacioSemana)
+    setPartesDetectadas([])
+    setTextoPegado('')
     cargar()
   }
 
-  function nuevaParte(semanaId, seccionKey, esLectura = false) {
-    setFormParte({ ...vacioParte, seccion: seccionKey, es_lectura_biblia: esLectura })
+  function interpretarTexto() {
+    const { lecturaBiblia, partes } = parsearPrograma(textoPegado)
+    if (lecturaBiblia) setFormSemana((f) => ({ ...f, lectura_biblia: lecturaBiblia }))
+    setPartesDetectadas(partes)
+  }
+
+  function nuevaParte(semanaId, seccionKey, esLectura = false, tituloPrellenado = '') {
+    setFormParte({ ...vacioParte, seccion: seccionKey, es_lectura_biblia: esLectura, titulo: tituloPrellenado })
     setSemanaActivaId(semanaId)
     setEditandoParteId(null)
   }
@@ -208,7 +265,53 @@ export default function VidaMinisterio() {
       </div>
 
       {mostrarFormSemana && (
-        <form onSubmit={crearSemana} className="mb-8 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <div className="mb-8 flex flex-col gap-3">
+          <div className="border border-ink/10 rounded-lg bg-paper-dim p-4">
+            <button
+              type="button"
+              onClick={() => setMostrarPegado(!mostrarPegado)}
+              className="font-mono text-xs text-petrol hover:text-petrol-dark"
+            >
+              {mostrarPegado ? '− ocultar' : '+ pegar programa desde JW Library'}
+            </button>
+            {mostrarPegado && (
+              <div className="mt-3 flex flex-col gap-2">
+                <p className="text-xs text-ink-soft">
+                  Copiá el texto del programa de la semana (desde JW Library o tu propia app) y pegalo acá. Vamos a
+                  detectar los títulos y minutos automáticamente — vos revisás y asignás a las personas después.
+                </p>
+                <textarea
+                  value={textoPegado}
+                  onChange={(e) => setTextoPegado(e.target.value)}
+                  rows={6}
+                  placeholder={'Pegá acá el texto del programa semanal…'}
+                  className="border border-ink/15 rounded-md px-3 py-2 text-sm font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={interpretarTexto}
+                  className="self-start bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark"
+                >
+                  Interpretar texto
+                </button>
+                {partesDetectadas.length > 0 && (
+                  <div className="mt-2 border border-gold/40 bg-gold-soft/10 rounded-md p-3">
+                    <p className="font-mono text-xs text-gold mb-2">{partesDetectadas.length} partes detectadas:</p>
+                    <ul className="text-sm flex flex-col gap-1">
+                      {partesDetectadas.map((p, i) => (
+                        <li key={i} className="text-ink-soft">
+                          <span className="text-ink">{p.titulo}</span> ({p.duracion_min} min) — {p.seccion}
+                          {p.es_lectura_biblia && ' · lectura de la Biblia'}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={crearSemana} className="border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
           <div className="flex gap-3">
             <input
               required
@@ -253,9 +356,10 @@ export default function VidaMinisterio() {
           )}
           <div className="flex gap-2">
             <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">Guardar</button>
-            <button type="button" onClick={() => setMostrarFormSemana(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">Cancelar</button>
+            <button type="button" onClick={() => { setMostrarFormSemana(false); setPartesDetectadas([]); setTextoPegado('') }} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">Cancelar</button>
           </div>
-        </form>
+          </form>
+        </div>
       )}
 
       {semanas.length === 0 && <p className="text-ink-soft text-sm">No hay semanas próximas cargadas.</p>}
@@ -269,9 +373,9 @@ export default function VidaMinisterio() {
                 {semana.lectura_biblia && <p className="font-mono text-xs text-ink-soft uppercase">{semana.lectura_biblia}</p>}
               </div>
               <div className="font-mono text-xs text-ink-soft flex flex-wrap gap-3 items-center">
-                {semana.presidente?.nombre && <span>Presidente <b className="text-ink">{semana.presidente.nombre}</b></span>}
+                <span>Presidente <b className="text-ink"><NombreOFranja nombre={semana.presidente?.nombre} /></b></span>
                 {semana.cantico_inicial && <span>🎵{semana.cantico_inicial}</span>}
-                {semana.oracion_inicial?.nombre && <span>Oración <b className="text-ink">{semana.oracion_inicial.nombre}</b></span>}
+                <span>Oración <b className="text-ink"><NombreOFranja nombre={semana.oracion_inicial?.nombre} /></b></span>
               </div>
             </div>
 
@@ -287,16 +391,21 @@ export default function VidaMinisterio() {
                 return (
                   <div key={s.key}>
                     <div className="flex items-center justify-between mb-2">
-                      <h2 className="font-mono text-xs uppercase tracking-wider text-petrol">{s.label}</h2>
+                      <h2 className={`font-mono text-xs uppercase tracking-wider ${s.color}`}>{s.icono} {s.label}</h2>
                       {esTesoros ? (
                         <div className="flex gap-3">
                           {esEditorOraciones && (
-                            <button onClick={() => nuevaParte(semana.id, 'tesoros', false)} className="font-mono text-xs text-ink-soft hover:text-petrol">
-                              + discurso
-                            </button>
+                            <>
+                              <button onClick={() => nuevaParte(semana.id, 'tesoros', false)} className="font-mono text-xs text-ink-soft hover:text-petrol">
+                                + discurso
+                              </button>
+                              <button onClick={() => nuevaParte(semana.id, 'tesoros', false, 'Busquemos perlas escondidas')} className="font-mono text-xs text-ink-soft hover:text-petrol">
+                                + perlas escondidas
+                              </button>
+                            </>
                           )}
                           {esEditorEscuela && (
-                            <button onClick={() => nuevaParte(semana.id, 'tesoros', true)} className="font-mono text-xs text-ink-soft hover:text-petrol">
+                            <button onClick={() => nuevaParte(semana.id, 'tesoros', true, 'Lectura de la Biblia')} className="font-mono text-xs text-ink-soft hover:text-petrol">
                               + lectura de la Biblia
                             </button>
                           )}
@@ -386,10 +495,10 @@ export default function VidaMinisterio() {
                 )
               })}
 
-              {(semana.cantico_final || semana.oracion_final?.nombre) && (
+              {(semana.cantico_final || semana.oracion_final !== undefined) && (
                 <div className="font-mono text-xs text-ink-soft flex gap-3 border-t border-ink/10 pt-3">
                   {semana.cantico_final && <span>🎵{semana.cantico_final}</span>}
-                  {semana.oracion_final?.nombre && <span>Oración final <b className="text-ink">{semana.oracion_final.nombre}</b></span>}
+                  <span>Oración final <b className="text-ink"><NombreOFranja nombre={semana.oracion_final?.nombre} /></b></span>
                 </div>
               )}
 
@@ -430,7 +539,7 @@ export default function VidaMinisterio() {
                     {tareasCampos.map((c) => (
                       <div key={c.key} className="border border-ink/10 rounded-md p-2">
                         <p className="text-[10px] font-mono uppercase text-ink-soft">{c.label}</p>
-                        <p className="text-sm">{personas.find((p) => p.id === semana.tareas_mecanicas[c.key])?.nombre || '—'}</p>
+                        <p className="text-sm"><NombreOFranja nombre={personas.find((p) => p.id === semana.tareas_mecanicas[c.key])?.nombre} /></p>
                       </div>
                     ))}
                   </div>
@@ -446,6 +555,11 @@ export default function VidaMinisterio() {
   )
 }
 
+function NombreOFranja({ nombre }) {
+  if (nombre) return <span>{nombre}</span>
+  return <span className="inline-block w-24 h-3.5 rounded bg-ink/10 align-middle" title="Sin asignar" />
+}
+
 function PartesLista({ partes, esEditor, puedeEditarParte, onEditar, onEliminar }) {
   return (
     <div className="flex flex-col gap-2">
@@ -457,12 +571,15 @@ function PartesLista({ partes, esEditor, puedeEditarParte, onEditar, onEliminar 
               <p className="font-medium text-sm">
                 {p.titulo} {p.duracion_min && <span className="text-ink-soft font-normal">({p.duracion_min} min)</span>}
               </p>
-              {(p.asignado?.nombre || p.ayudante?.nombre) && (
-                <p className="text-xs text-ink-soft mt-0.5">
-                  {p.asignado?.nombre}
-                  {p.ayudante?.nombre && ` · ${p.ayudante.nombre}`}
-                </p>
-              )}
+              <p className="text-xs text-ink-soft mt-1 flex items-center gap-2">
+                <NombreOFranja nombre={p.asignado?.nombre} />
+                {p.seccion === 'ministerio' && (
+                  <>
+                    <span>·</span>
+                    <NombreOFranja nombre={p.ayudante?.nombre} />
+                  </>
+                )}
+              </p>
               {p.notas && <p className="text-xs text-ink-soft mt-0.5">{p.notas}</p>}
             </div>
             {mostrarBotones && (
