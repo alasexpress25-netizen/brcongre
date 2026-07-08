@@ -64,6 +64,9 @@ export default function Layout({ children }) {
                     <Link to="/mis-asignaciones" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
                       mis asignaciones
                     </Link>
+                    <Link to="/mi-cuenta" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
+                      mi cuenta
+                    </Link>
                     {puedeGestionarPublicadores && (
                       <Link to="/publicadores" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
                         publicadores
