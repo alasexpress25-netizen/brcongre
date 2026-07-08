@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabaseClient'
+import { getIdentidad } from '../lib/identidad'
 
 const tareaLabels = {
   audio_id: 'Audio', video_id: 'Video',
@@ -14,15 +15,19 @@ const tareaLabels = {
 
 export default function MisAsignaciones() {
   const { session, perfil } = useAuth()
+  const identidad = getIdentidad()
+  const email = session?.user?.email || identidad?.email
+  const nombreMostrar = perfil?.nombre || identidad?.nombre
+
   const [items, setItems] = useState([])
   const [cargando, setCargando] = useState(true)
   const [tieneFicha, setTieneFicha] = useState(true)
 
   useEffect(() => {
-    if (session) cargar(session.user.id, session.user.email)
-  }, [session])
+    if (email) cargar(email)
+  }, [email])
 
-  async function cargar(uid, email) {
+  async function cargar(email) {
     setCargando(true)
     const ahora = new Date()
     const hoy = ahora.toISOString().slice(0, 10)
@@ -38,10 +43,9 @@ export default function MisAsignaciones() {
     lunesActual.setDate(ahora.getDate() + diffLunes)
     const inicioSemanaActual = lunesActual.toISOString().slice(0, 10)
 
-    // Las asignaciones de Vida y Ministerio, Reunión Pública y Limpieza se
-    // guardan contra la ficha de "Publicadores" (no contra la cuenta con la
-    // que se inicia sesión). Para poder mostrárselas a la persona logueada,
-    // primero buscamos su ficha de publicador por email.
+    // Todas las asignaciones (Predicación, Vida y Ministerio, Reunión Pública
+    // y Limpieza) se guardan contra la ficha de "Publicadores", así que
+    // primero buscamos esa ficha por email.
     let publicadorId = null
     let grupoId = null
     if (email) {
@@ -58,8 +62,9 @@ export default function MisAsignaciones() {
     const sinResultados = Promise.resolve({ data: [] })
 
     const [salidas, partes, semanasVM, reuniones, limpieza, tareasVM, tareasRP] = await Promise.all([
-      // El conductor de la salida de predicación sí se asigna por cuenta (profiles).
-      supabase.from('salidas_predicacion').select('id, fecha, hora, punto_encuentro, grupos(nombre)').eq('encargado_id', uid).gte('fecha', hoy),
+      publicadorId
+        ? supabase.from('salidas_predicacion').select('id, fecha, hora, punto_encuentro, grupos(nombre)').eq('encargado_id', publicadorId).gte('fecha', hoy)
+        : sinResultados,
       publicadorId
         ? supabase.from('partes_vida_ministerio').select('id, titulo, seccion, semanas_vida_ministerio(fecha_inicio)').or(`asignado_id.eq.${publicadorId},ayudante_id.eq.${publicadorId}`)
         : sinResultados,
@@ -132,10 +137,10 @@ export default function MisAsignaciones() {
     setCargando(false)
   }
 
-  if (!session) {
+  if (!email) {
     return (
       <Layout>
-        <p className="text-ink-soft text-sm">Iniciá sesión para ver tus asignaciones personales.</p>
+        <p className="text-ink-soft text-sm">Identificate con tu email para ver tus asignaciones personales.</p>
       </Layout>
     )
   }
@@ -143,13 +148,13 @@ export default function MisAsignaciones() {
   return (
     <Layout>
       <h1 className="font-display text-2xl font-semibold mb-1">Mis asignaciones</h1>
-      <p className="text-sm text-ink-soft mb-6">Hola, {perfil?.nombre}. Esto es lo próximo que tenés a cargo.</p>
+      <p className="text-sm text-ink-soft mb-6">Hola{nombreMostrar ? `, ${nombreMostrar}` : ''}. Esto es lo próximo que tenés a cargo.</p>
 
       {!cargando && !tieneFicha && (
         <p className="text-sm text-clay mb-4 border border-clay/30 bg-clay/5 rounded-md px-3 py-2">
-          No encontramos una ficha de publicador con tu email ({session?.user?.email}). Pedile a quien gestiona
-          Publicadores que cargue ese email en tu ficha para poder ver acá tus asignaciones de Vida y Ministerio,
-          Reunión Pública y Limpieza. (Las salidas de predicación en las que sos conductor sí se muestran igual.)
+          No encontramos una ficha de publicador con tu email ({email}). Comunicate con el secretario de tu
+          congregación para que te pueda agregar como publicador activo y así ver tus asignaciones de
+          Predicación, Vida y Ministerio, Reunión Pública y Limpieza.
         </p>
       )}
 

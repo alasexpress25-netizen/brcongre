@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import GateIdentificacion from './components/GateIdentificacion'
 import Index from './pages/Index'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
@@ -20,7 +21,8 @@ import Informes from './pages/Informes'
 
 export default function App() {
   return (
-    <Routes>
+    <GateIdentificacion>
+      <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Registro />} />
@@ -39,6 +41,7 @@ export default function App() {
       <Route path="/informe-predicacion" element={<InformePredicacion />} />
       <Route path="/precursor-auxiliar" element={<PrecursorAuxiliar />} />
       <Route path="/informes" element={<Informes />} />
-    </Routes>
+      </Routes>
+    </GateIdentificacion>
   )
 }

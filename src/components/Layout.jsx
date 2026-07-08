@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { useConfig } from '../lib/useConfig'
+import { getIdentidad, limpiarIdentidad } from '../lib/identidad'
 import AjusteFuente from './AjusteFuente'
 
 const NAV_ITEMS = [
@@ -23,6 +24,12 @@ export default function Layout({ children }) {
   const puedeGestionarPublicadores = puedeEditar('secretario')
   const puedeVerTerritorios = puedeEditar('predicacion')
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const identidad = getIdentidad()
+
+  function cambiarIdentidad() {
+    limpiarIdentidad()
+    window.location.reload()
+  }
 
   const hayInfoSecundaria =
     config?.direccion || config?.telefono_contacto || config?.dia_reunion_publica || config?.dia_vida_ministerio
@@ -120,9 +127,25 @@ export default function Layout({ children }) {
                     </button>
                   </>
                 ) : (
-                  <Link to="/login" onClick={cerrarMenu} className="underline decoration-gold-soft/50 hover:text-gold-soft transition-colors">
-                    iniciar sesión
-                  </Link>
+                  <>
+                    {identidad?.nombre && (
+                      <>
+                        <Link to="/mis-asignaciones" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
+                          mis asignaciones
+                        </Link>
+                        <span className="text-paper/50">{identidad.nombre}</span>
+                        <button
+                          onClick={() => { cambiarIdentidad(); cerrarMenu() }}
+                          className="text-left underline decoration-gold-soft/50 hover:text-gold-soft transition-colors"
+                        >
+                          no soy yo, cambiar email
+                        </button>
+                      </>
+                    )}
+                    <Link to="/login" onClick={cerrarMenu} className="underline decoration-gold-soft/50 hover:text-gold-soft transition-colors">
+                      iniciar sesión
+                    </Link>
+                  </>
                 )}
               </div>
             </nav>

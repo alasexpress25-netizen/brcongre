@@ -102,7 +102,7 @@ function PredicacionResumen() {
       setCargando(true)
       const { data } = await supabase
         .from('salidas_predicacion')
-        .select('*, grupos(nombre), profiles!salidas_predicacion_encargado_id_fkey(nombre)')
+        .select('*, grupos(nombre), publicadores!salidas_predicacion_encargado_id_fkey(nombre)')
         .eq('fecha', diaISO)
         .order('hora', { ascending: true })
       if (!activo) return
@@ -170,7 +170,7 @@ function PredicacionResumen() {
                     {s.punto_encuentro && ` · 📍 ${s.punto_encuentro}`}
                   </p>
                 </div>
-                {s.profiles?.nombre && <p className="font-mono text-xs text-ink-soft shrink-0">🚗 {s.profiles.nombre}</p>}
+                {s.publicadores?.nombre && <p className="font-mono text-xs text-ink-soft shrink-0">🚗 {s.publicadores.nombre}</p>}
               </div>
             ))}
           </div>

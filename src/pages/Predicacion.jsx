@@ -27,12 +27,12 @@ export default function Predicacion() {
     setCargando(true)
     const [{ data: g }, { data: p }, { data: t }, { data: s }] = await Promise.all([
       supabase.from('grupos').select('*').order('nombre'),
-      supabase.from('profiles').select('id, nombre').order('nombre'),
+      supabase.from('publicadores').select('id, nombre').eq('activo', true).order('nombre'),
       supabase.rpc('territorios_numeros_publico'),
       supabase
         .from('salidas_predicacion')
         .select(
-          '*, grupos(nombre), profiles!salidas_predicacion_encargado_id_fkey(nombre), salidas_predicacion_territorios(territorio_id)'
+          '*, grupos(nombre), publicadores!salidas_predicacion_encargado_id_fkey(nombre), salidas_predicacion_territorios(territorio_id)'
         )
         .gte('fecha', new Date().toISOString().slice(0, 10))
         .order('fecha', { ascending: true }),
@@ -256,7 +256,7 @@ export default function Predicacion() {
               )}
             </div>
             {s.punto_encuentro && <p className="text-sm text-ink-soft mt-1">📍 {s.punto_encuentro}</p>}
-            {s.profiles?.nombre && <p className="text-sm text-ink-soft mt-1">🚗 Conductor: {s.profiles.nombre}</p>}
+            {s.publicadores?.nombre && <p className="text-sm text-ink-soft mt-1">🚗 Conductor: {s.publicadores.nombre}</p>}
             {s.salidas_predicacion_territorios?.length > 0 && (
               <p className="text-sm text-ink-soft mt-1">
                 🗺️ Territorio(s):{' '}
