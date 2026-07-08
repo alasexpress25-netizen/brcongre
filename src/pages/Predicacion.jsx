@@ -3,7 +3,7 @@ import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 
-const vacioSalida = { grupo_id: '', fecha: '', hora: '', punto_encuentro: '', encargado_id: '', notas: '' }
+const vacioSalida = { grupo_id: '', fecha: '', hora: '', punto_encuentro: '', encargado_id: '', notas: '', territorio_ids: [] }
 
 function formatearFecha(f) {
   return new Date(f + 'T00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' })
@@ -15,6 +15,7 @@ export default function Predicacion() {
   const esSecretario = puedeEditar('secretario')
   const [grupos, setGrupos] = useState([])
   const [publicadores, setPublicadores] = useState([])
+  const [territoriosDisponibles, setTerritoriosDisponibles] = useState([])
   const [salidas, setSalidas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [form, setForm] = useState(vacioSalida)
@@ -24,17 +25,21 @@ export default function Predicacion() {
 
   async function cargar() {
     setCargando(true)
-    const [{ data: g }, { data: p }, { data: s }] = await Promise.all([
+    const [{ data: g }, { data: p }, { data: t }, { data: s }] = await Promise.all([
       supabase.from('grupos').select('*').order('nombre'),
       supabase.from('profiles').select('id, nombre').order('nombre'),
+      supabase.rpc('territorios_numeros_publico'),
       supabase
         .from('salidas_predicacion')
-        .select('*, grupos(nombre), profiles!salidas_predicacion_encargado_id_fkey(nombre)')
+        .select(
+          '*, grupos(nombre), profiles!salidas_predicacion_encargado_id_fkey(nombre), salidas_predicacion_territorios(territorio_id)'
+        )
         .gte('fecha', new Date().toISOString().slice(0, 10))
         .order('fecha', { ascending: true }),
     ])
     setGrupos(g || [])
     setPublicadores(p || [])
+    setTerritoriosDisponibles(t || [])
     setSalidas(s || [])
     setCargando(false)
   }
@@ -59,9 +64,19 @@ export default function Predicacion() {
       punto_encuentro: s.punto_encuentro || '',
       encargado_id: s.encargado_id || '',
       notas: s.notas || '',
+      territorio_ids: (s.salidas_predicacion_territorios || []).map((st) => st.territorio_id),
     })
     setEditandoId(s.id)
     setMostrarForm(true)
+  }
+
+  function alternarTerritorio(id) {
+    setForm((f) => ({
+      ...f,
+      territorio_ids: f.territorio_ids.includes(id)
+        ? f.territorio_ids.filter((tid) => tid !== id)
+        : [...f.territorio_ids, id],
+    }))
   }
 
   function nueva() {
@@ -72,9 +87,26 @@ export default function Predicacion() {
 
   async function guardar(e) {
     e.preventDefault()
-    const payload = { ...form, grupo_id: form.grupo_id || null, encargado_id: form.encargado_id || null }
-    if (editandoId) await supabase.from('salidas_predicacion').update(payload).eq('id', editandoId)
-    else await supabase.from('salidas_predicacion').insert(payload)
+    const { territorio_ids, ...resto } = form
+    const payload = { ...resto, grupo_id: form.grupo_id || null, encargado_id: form.encargado_id || null }
+
+    let salidaId = editandoId
+    if (editandoId) {
+      await supabase.from('salidas_predicacion').update(payload).eq('id', editandoId)
+    } else {
+      const { data } = await supabase.from('salidas_predicacion').insert(payload).select('id').single()
+      salidaId = data?.id
+    }
+
+    if (salidaId) {
+      await supabase.from('salidas_predicacion_territorios').delete().eq('salida_id', salidaId)
+      if (territorio_ids.length > 0) {
+        await supabase.from('salidas_predicacion_territorios').insert(
+          territorio_ids.map((territorio_id) => ({ salida_id: salidaId, territorio_id }))
+        )
+      }
+    }
+
     setMostrarForm(false)
     setForm(vacioSalida)
     setEditandoId(null)
@@ -168,6 +200,30 @@ export default function Predicacion() {
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
             rows={2}
           />
+          <div>
+            <label className="text-xs text-ink-soft font-mono block mb-1.5">
+              Territorios a predicar {territoriosDisponibles.length === 0 && '(no hay territorios cargados aún)'}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {territoriosDisponibles.map((t) => {
+                const seleccionado = form.territorio_ids.includes(t.id)
+                return (
+                  <button
+                    type="button"
+                    key={t.id}
+                    onClick={() => alternarTerritorio(t.id)}
+                    className={`font-mono text-xs rounded-full px-3 py-1 border transition-colors ${
+                      seleccionado
+                        ? 'bg-petrol text-paper border-petrol'
+                        : 'bg-paper-dim text-ink-soft border-ink/15 hover:border-petrol/50'
+                    }`}
+                  >
+                    {t.numero}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           <div className="flex gap-2">
             <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
               Guardar
@@ -201,6 +257,15 @@ export default function Predicacion() {
             </div>
             {s.punto_encuentro && <p className="text-sm text-ink-soft mt-1">📍 {s.punto_encuentro}</p>}
             {s.profiles?.nombre && <p className="text-sm text-ink-soft mt-1">🚗 Conductor: {s.profiles.nombre}</p>}
+            {s.salidas_predicacion_territorios?.length > 0 && (
+              <p className="text-sm text-ink-soft mt-1">
+                🗺️ Territorio(s):{' '}
+                {s.salidas_predicacion_territorios
+                  .map((st) => territoriosDisponibles.find((t) => t.id === st.territorio_id)?.numero)
+                  .filter((n) => n !== undefined)
+                  .join(', ')}
+              </p>
+            )}
             {s.notas && <p className="text-sm text-ink-soft mt-1">{s.notas}</p>}
           </div>
         ))}

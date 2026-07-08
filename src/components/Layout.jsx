@@ -21,6 +21,7 @@ export default function Layout({ children }) {
   const { config } = useConfig()
   const { session, perfil, cerrarSesion, esAdmin, puedeEditar } = useAuth()
   const puedeGestionarPublicadores = puedeEditar('secretario')
+  const puedeVerTerritorios = puedeEditar('predicacion')
   const [menuAbierto, setMenuAbierto] = useState(false)
 
   function cerrarMenu() {
@@ -72,9 +73,19 @@ export default function Layout({ children }) {
                         publicadores
                       </Link>
                     )}
+                    {puedeVerTerritorios && (
+                      <Link to="/territorios" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
+                        territorios
+                      </Link>
+                    )}
                     {puedeGestionarPublicadores && (
                       <Link to="/informes" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
                         informes
+                      </Link>
+                    )}
+                    {esAdmin && (
+                      <Link to="/configuracion" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
+                        datos de la congregación
                       </Link>
                     )}
                     {esAdmin && (
