@@ -24,6 +24,9 @@ export default function Layout({ children }) {
   const puedeVerTerritorios = puedeEditar('predicacion')
   const [menuAbierto, setMenuAbierto] = useState(false)
 
+  const hayInfoSecundaria =
+    config?.direccion || config?.telefono_contacto || config?.dia_reunion_publica || config?.dia_vida_ministerio
+
   function cerrarMenu() {
     setMenuAbierto(false)
   }
@@ -50,6 +53,21 @@ export default function Layout({ children }) {
             {menuAbierto ? '✕' : '☰'}
           </button>
         </div>
+
+        {hayInfoSecundaria && (
+          <div className="hidden sm:block border-t border-paper/10">
+            <div className="max-w-4xl mx-auto px-5 pb-2 pl-[2.75rem] flex flex-wrap items-center gap-x-4 gap-y-0.5 font-mono text-[11px] text-paper/50">
+              {config.direccion && <span className="truncate max-w-[16rem]">📍 {config.direccion}</span>}
+              {config.telefono_contacto && <span>📞 {config.telefono_contacto}</span>}
+              {config.dia_reunion_publica && (
+                <span>🎙️ Reunión pública: {config.dia_reunion_publica}{config.hora_reunion_publica && ` · ${config.hora_reunion_publica}`}</span>
+              )}
+              {config.dia_vida_ministerio && (
+                <span>📖 Vida y Ministerio: {config.dia_vida_ministerio}{config.hora_vida_ministerio && ` · ${config.hora_vida_ministerio}`}</span>
+              )}
+            </div>
+          </div>
+        )}
 
         {menuAbierto && (
           <div className="border-t border-paper/10 bg-petrol-dark">
