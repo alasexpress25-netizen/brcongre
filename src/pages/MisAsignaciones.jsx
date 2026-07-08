@@ -24,7 +24,19 @@ export default function MisAsignaciones() {
 
   async function cargar(uid, email) {
     setCargando(true)
-    const hoy = new Date().toISOString().slice(0, 10)
+    const ahora = new Date()
+    const hoy = ahora.toISOString().slice(0, 10)
+
+    // semanas_vida_ministerio guarda fecha_inicio = lunes de esa semana. Si
+    // filtramos por fecha_inicio >= hoy, la semana en curso desaparece apenas
+    // pasa el lunes (ej. si hoy es jueves, el lunes de esta semana ya quedó
+    // "en el pasado" aunque la semana siga vigente). Por eso comparamos
+    // contra el lunes de la semana actual, no contra la fecha de hoy.
+    const diaSemana = ahora.getDay() // 0 = domingo … 6 = sábado
+    const diffLunes = diaSemana === 0 ? -6 : 1 - diaSemana
+    const lunesActual = new Date(ahora)
+    lunesActual.setDate(ahora.getDate() + diffLunes)
+    const inicioSemanaActual = lunesActual.toISOString().slice(0, 10)
 
     // Las asignaciones de Vida y Ministerio, Reunión Pública y Limpieza se
     // guardan contra la ficha de "Publicadores" (no contra la cuenta con la
@@ -52,7 +64,7 @@ export default function MisAsignaciones() {
         ? supabase.from('partes_vida_ministerio').select('id, titulo, seccion, semanas_vida_ministerio(fecha_inicio)').or(`asignado_id.eq.${publicadorId},ayudante_id.eq.${publicadorId}`)
         : sinResultados,
       publicadorId
-        ? supabase.from('semanas_vida_ministerio').select('id, fecha_inicio, presidente_id, oracion_inicial_id, oracion_final_id').gte('fecha_inicio', hoy)
+        ? supabase.from('semanas_vida_ministerio').select('id, fecha_inicio, presidente_id, oracion_inicial_id, oracion_final_id').gte('fecha_inicio', inicioSemanaActual)
         : sinResultados,
       publicadorId
         ? supabase.from('reuniones_publicas').select('id, fecha, tema, orador_id, presidente_id, conductor_atalaya_id, lector_id').gte('fecha', hoy)
@@ -76,7 +88,7 @@ export default function MisAsignaciones() {
     }))
 
     ;(partes.data || [])
-      .filter((p) => p.semanas_vida_ministerio?.fecha_inicio >= hoy)
+      .filter((p) => p.semanas_vida_ministerio?.fecha_inicio >= inicioSemanaActual)
       .forEach((p) => lista.push({
         tipo: 'Vida y Ministerio', titulo: p.titulo, fecha: p.semanas_vida_ministerio?.fecha_inicio, detalle: p.seccion.replace('_', ' '),
       }))
@@ -100,7 +112,7 @@ export default function MisAsignaciones() {
     }))
 
     ;(tareasVM.data || [])
-      .filter((t) => t.semanas_vida_ministerio?.fecha_inicio >= hoy)
+      .filter((t) => t.semanas_vida_ministerio?.fecha_inicio >= inicioSemanaActual)
       .forEach((t) => {
         Object.keys(tareaLabels).forEach((clave) => {
           if (t[clave] === publicadorId) lista.push({ tipo: 'Vida y Ministerio', titulo: tareaLabels[clave], fecha: t.semanas_vida_ministerio.fecha_inicio, detalle: 'tarea mecánica' })
