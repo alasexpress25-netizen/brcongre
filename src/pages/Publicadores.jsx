@@ -110,18 +110,17 @@ export default function Publicadores() {
     cargar()
   }
 
-  async function eliminar(id) {
+  async function eliminar() {
+    if (!editandoId) return
     if (!confirm('¿Eliminar este publicador? Si tiene asignaciones o tareas vinculadas puede que la base de datos rechace el borrado.')) return
-    const { error: err } = await supabase.from('publicadores').delete().eq('id', id)
+    const { error: err } = await supabase.from('publicadores').delete().eq('id', editandoId)
     if (err) {
       alert('No se pudo eliminar: ' + err.message)
       return
     }
-    cargar()
-  }
-
-  async function alternarActivo(p) {
-    await supabase.from('publicadores').update({ activo: !p.activo }).eq('id', p.id)
+    setMostrarForm(false)
+    setForm(vacio)
+    setEditandoId(null)
     cargar()
   }
 
@@ -245,8 +244,8 @@ export default function Publicadores() {
               ))}
             </select>
             <label className="flex items-center gap-2 text-sm text-ink-soft shrink-0">
-              <input type="checkbox" checked={form.activo} onChange={(e) => setForm({ ...form, activo: e.target.checked })} />
-              activo
+              <input type="checkbox" checked={!form.activo} onChange={(e) => setForm({ ...form, activo: !e.target.checked })} />
+              inactivo
             </label>
           </div>
           <textarea
@@ -263,6 +262,11 @@ export default function Publicadores() {
             <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">
               Cancelar
             </button>
+            {editandoId && (
+              <button type="button" onClick={eliminar} className="text-clay text-sm px-4 py-2 hover:text-clay/80 ml-auto">
+                Borrar publicador
+              </button>
+            )}
           </div>
         </form>
       )}
@@ -310,11 +314,7 @@ export default function Publicadores() {
                 {!p.activo && <p className="font-mono text-xs text-gold mt-0.5">inactivo</p>}
               </div>
               <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0 no-print">
-                <button onClick={() => alternarActivo(p)} className="hover:text-petrol">
-                  {p.activo ? 'desactivar' : 'activar'}
-                </button>
                 <button onClick={() => editar(p)} className="hover:text-petrol">editar</button>
-                <button onClick={() => eliminar(p.id)} className="hover:text-clay">borrar</button>
               </div>
             </div>
             {p.notas && <p className="text-sm text-ink-soft mt-2">{p.notas}</p>}
