@@ -20,6 +20,7 @@ const vacio = {
   numero_documento: '',
   cpf: '',
   servicio: 'publicador',
+  grupo_id: '',
   activo: true,
   notas: '',
 }
@@ -33,19 +34,25 @@ export default function Publicadores() {
   const esEditor = puedeEditar('secretario')
 
   const [publicadores, setPublicadores] = useState([])
+  const [grupos, setGrupos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [form, setForm] = useState(vacio)
   const [editandoId, setEditandoId] = useState(null)
   const [mostrarForm, setMostrarForm] = useState(false)
   const [busqueda, setBusqueda] = useState('')
+  const [grupoFiltro, setGrupoFiltro] = useState('')
   const [mostrarInactivos, setMostrarInactivos] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
 
   async function cargar() {
     setCargando(true)
-    const { data } = await supabase.from('publicadores').select('*').order('nombre')
+    const [{ data }, { data: g }] = await Promise.all([
+      supabase.from('publicadores').select('*, grupos(nombre)').order('nombre'),
+      supabase.from('grupos').select('*').order('nombre'),
+    ])
     setPublicadores(data || [])
+    setGrupos(g || [])
     setCargando(false)
   }
 
@@ -62,6 +69,7 @@ export default function Publicadores() {
       numero_documento: p.numero_documento || '',
       cpf: p.cpf || '',
       servicio: p.servicio || 'publicador',
+      grupo_id: p.grupo_id || '',
       activo: p.activo,
       notas: p.notas || '',
     })
@@ -122,9 +130,22 @@ export default function Publicadores() {
     return publicadores
       .filter((p) => mostrarInactivos || p.activo)
       .filter((p) => !q || p.nombre.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q))
-  }, [publicadores, busqueda, mostrarInactivos])
+      .filter((p) => {
+        if (!grupoFiltro) return true
+        if (grupoFiltro === 'sin_grupo') return !p.grupo_id
+        return p.grupo_id === grupoFiltro
+      })
+  }, [publicadores, busqueda, mostrarInactivos, grupoFiltro])
 
   const sinEmail = publicadores.filter((p) => p.activo && !p.email).length
+
+  const nombreGrupoFiltro = grupoFiltro === 'sin_grupo'
+    ? 'Sin grupo'
+    : grupos.find((g) => g.id === grupoFiltro)?.nombre || ''
+
+  function imprimir() {
+    window.print()
+  }
 
   if (!esEditor) {
     return (
@@ -136,18 +157,30 @@ export default function Publicadores() {
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-1 no-print">
         <h1 className="font-display text-2xl font-semibold">Publicadores</h1>
-        <button onClick={nuevo} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
-          + nuevo
-        </button>
+        <div className="flex gap-2">
+          <button onClick={imprimir} className="font-mono text-xs border border-petrol/30 text-petrol px-3 py-1.5 rounded-md hover:bg-petrol/10 transition-colors">
+            imprimir
+          </button>
+          <button onClick={nuevo} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
+            + nuevo
+          </button>
+        </div>
       </div>
-      <p className="text-sm text-ink-soft mb-6">
+      <p className="text-sm text-ink-soft mb-6 no-print">
         {publicadores.length} en total{sinEmail > 0 && ` · ${sinEmail} activo(s) sin email cargado (no recibirán notificaciones)`}
       </p>
 
+      <div className="print-only mb-6">
+        <h1 className="font-display text-2xl font-semibold">Publicadores{nombreGrupoFiltro && ` — ${nombreGrupoFiltro}`}</h1>
+        <p className="text-sm text-ink-soft">
+          {filtrados.length} publicador(es) · {new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </p>
+      </div>
+
       {mostrarForm && (
-        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <form onSubmit={guardar} className="no-print mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
           {error && <p className="text-sm text-clay">{error}</p>}
           <input
             required
@@ -201,6 +234,16 @@ export default function Publicadores() {
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
+            <select
+              value={form.grupo_id}
+              onChange={(e) => setForm({ ...form, grupo_id: e.target.value })}
+              className="flex-1 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
+            >
+              <option value="">Sin grupo</option>
+              {grupos.map((g) => (
+                <option key={g.id} value={g.id}>{g.nombre}</option>
+              ))}
+            </select>
             <label className="flex items-center gap-2 text-sm text-ink-soft shrink-0">
               <input type="checkbox" checked={form.activo} onChange={(e) => setForm({ ...form, activo: e.target.checked })} />
               activo
@@ -224,20 +267,31 @@ export default function Publicadores() {
         </form>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4 no-print">
         <input
           placeholder="Buscar por nombre o email…"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           className="flex-1 min-w-[200px] border border-ink/15 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-petrol"
         />
+        <select
+          value={grupoFiltro}
+          onChange={(e) => setGrupoFiltro(e.target.value)}
+          className="border border-ink/15 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-petrol"
+        >
+          <option value="">Todos los grupos</option>
+          <option value="sin_grupo">Sin grupo</option>
+          {grupos.map((g) => (
+            <option key={g.id} value={g.id}>{g.nombre}</option>
+          ))}
+        </select>
         <label className="flex items-center gap-2 text-sm text-ink-soft shrink-0">
           <input type="checkbox" checked={mostrarInactivos} onChange={(e) => setMostrarInactivos(e.target.checked)} />
           mostrar inactivos
         </label>
       </div>
 
-      {cargando && <p className="text-ink-soft text-sm">Cargando…</p>}
+      {cargando && <p className="text-ink-soft text-sm no-print">Cargando…</p>}
       {!cargando && filtrados.length === 0 && <p className="text-ink-soft text-sm">No hay publicadores para mostrar.</p>}
 
       <div className="flex flex-col gap-3">
@@ -251,10 +305,11 @@ export default function Publicadores() {
                 <p className="text-sm text-ink-soft mt-0.5">
                   {p.email || <span className="text-clay">sin email</span>}
                   {p.telefono && ` · ${p.telefono}`}
+                  {p.grupos?.nombre && ` · ${p.grupos.nombre}`}
                 </p>
                 {!p.activo && <p className="font-mono text-xs text-gold mt-0.5">inactivo</p>}
               </div>
-              <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0">
+              <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0 no-print">
                 <button onClick={() => alternarActivo(p)} className="hover:text-petrol">
                   {p.activo ? 'desactivar' : 'activar'}
                 </button>

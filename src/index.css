@@ -33,3 +33,23 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Impresión: ocultamos la cabecera/pie del sitio y cualquier elemento
+   marcado como "no-print" (botones, formularios, filtros, etc). Las páginas
+   pueden usar la clase "print-only" para mostrar contenido solo al imprimir. */
+@media print {
+  header,
+  footer {
+    display: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
+
+.print-only {
+  display: none;
+}

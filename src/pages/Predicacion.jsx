@@ -10,8 +10,9 @@ function formatearFecha(f) {
 }
 
 export default function Predicacion() {
-  const { puedeEditar, esAdmin } = useAuth()
+  const { puedeEditar } = useAuth()
   const esEditor = puedeEditar('predicacion')
+  const esSecretario = puedeEditar('secretario')
   const [grupos, setGrupos] = useState([])
   const [publicadores, setPublicadores] = useState([])
   const [salidas, setSalidas] = useState([])
@@ -97,7 +98,7 @@ export default function Predicacion() {
         )}
       </div>
 
-      {esAdmin && (
+      {esSecretario && (
         <details className="mb-6 border border-ink/10 rounded-lg bg-white p-4">
           <summary className="cursor-pointer font-mono text-xs text-ink-soft">gestionar grupos ({grupos.length})</summary>
           <ul className="mt-3 flex flex-wrap gap-2">

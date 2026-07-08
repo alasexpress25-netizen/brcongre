@@ -59,7 +59,13 @@ export default function Limpieza() {
     else await supabase.from('turnos_limpieza').insert(payload)
 
     if (payload.grupo_id) {
-      const { data: miembros } = await supabase.from('profiles').select('id').eq('grupo_id', payload.grupo_id).eq('aprobado', true)
+      // El grupo de cada persona ahora se carga en Publicadores, no en profiles.
+      const { data: miembros } = await supabase
+        .from('publicadores')
+        .select('id')
+        .eq('grupo_id', payload.grupo_id)
+        .eq('activo', true)
+        .not('email', 'is', null)
       const grupoNombre = grupos.find((g) => g.id === payload.grupo_id)?.nombre || 'tu grupo'
       notificar(
         miembros?.map((m) => m.id),
