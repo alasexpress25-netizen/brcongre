@@ -136,6 +136,20 @@ export default function Publicadores() {
       })
   }, [publicadores, busqueda, mostrarInactivos, grupoFiltro])
 
+  const gruposConPublicadores = useMemo(() => {
+    const porGrupo = new Map()
+    grupos.forEach((g) => porGrupo.set(g.id, { id: g.id, nombre: g.nombre, items: [] }))
+    porGrupo.set('sin_grupo', { id: 'sin_grupo', nombre: 'Sin grupo', items: [] })
+
+    filtrados.forEach((p) => {
+      const key = p.grupo_id || 'sin_grupo'
+      if (!porGrupo.has(key)) porGrupo.set(key, { id: key, nombre: p.grupos?.nombre || 'Sin grupo', items: [] })
+      porGrupo.get(key).items.push(p)
+    })
+
+    return Array.from(porGrupo.values()).filter((g) => g.items.length > 0)
+  }, [filtrados, grupos])
+
   const sinEmail = publicadores.filter((p) => p.activo && !p.email).length
 
   const nombreGrupoFiltro = grupoFiltro === 'sin_grupo'
@@ -296,28 +310,36 @@ export default function Publicadores() {
       </div>
 
       {cargando && <p className="text-ink-soft text-sm no-print">Cargando…</p>}
-      {!cargando && filtrados.length === 0 && <p className="text-ink-soft text-sm">No hay publicadores para mostrar.</p>}
+      {!cargando && gruposConPublicadores.length === 0 && <p className="text-ink-soft text-sm">No hay publicadores para mostrar.</p>}
 
-      <div className="flex flex-col gap-3">
-        {filtrados.map((p) => (
-          <div key={p.id} className={`border rounded-lg bg-white p-4 ${p.activo ? 'border-ink/10' : 'border-ink/10 opacity-60'}`}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-display font-semibold">
-                  {p.nombre} <span className="font-mono text-xs text-ink-soft">· {etiquetaServicio(p.servicio)}</span>
-                </p>
-                <p className="text-sm text-ink-soft mt-0.5">
-                  {p.email || <span className="text-clay">sin email</span>}
-                  {p.telefono && ` · ${p.telefono}`}
-                  {p.grupos?.nombre && ` · ${p.grupos.nombre}`}
-                </p>
-                {!p.activo && <p className="font-mono text-xs text-gold mt-0.5">inactivo</p>}
-              </div>
-              <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0 no-print">
-                <button onClick={() => editar(p)} className="hover:text-petrol">editar</button>
-              </div>
+      <div className="flex flex-col gap-6">
+        {gruposConPublicadores.map((g) => (
+          <div key={g.id} className="break-inside-avoid">
+            <h2 className="font-mono text-xs uppercase tracking-wide text-petrol font-semibold border-b border-ink/10 pb-1 mb-3">
+              {g.nombre} <span className="text-ink-soft normal-case">· {g.items.length}</span>
+            </h2>
+            <div className="flex flex-col gap-3">
+              {g.items.map((p) => (
+                <div key={p.id} className={`border rounded-lg bg-white p-4 ${p.activo ? 'border-ink/10' : 'border-ink/10 opacity-60'}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-display font-semibold">
+                        {p.nombre} <span className="font-mono text-xs text-ink-soft">· {etiquetaServicio(p.servicio)}</span>
+                      </p>
+                      <p className="text-sm text-ink-soft mt-0.5">
+                        {p.email || <span className="text-clay">sin email</span>}
+                        {p.telefono && ` · ${p.telefono}`}
+                      </p>
+                      {!p.activo && <p className="font-mono text-xs text-gold mt-0.5">inactivo</p>}
+                    </div>
+                    <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0 no-print">
+                      <button onClick={() => editar(p)} className="hover:text-petrol">editar</button>
+                    </div>
+                  </div>
+                  {p.notas && <p className="text-sm text-ink-soft mt-2">{p.notas}</p>}
+                </div>
+              ))}
             </div>
-            {p.notas && <p className="text-sm text-ink-soft mt-2">{p.notas}</p>}
           </div>
         ))}
       </div>
