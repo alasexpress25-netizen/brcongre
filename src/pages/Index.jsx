@@ -180,8 +180,52 @@ function PredicacionResumen() {
   )
 }
 
+function CompartirApp() {
+  const [copiado, setCopiado] = useState(false)
+  const url = window.location.origin
+  const mensaje = `Instalá la app de la congregación 📱\n\n${url}\n\nEntrá desde el celular y tocá "Agregar a pantalla de inicio" (o "Instalar app") para tenerla como una app más.`
+
+  async function copiarLink() {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    } catch {
+      // Si falla el clipboard (ej. sin permisos), no rompemos nada.
+    }
+  }
+
+  return (
+    <div className="mb-6 rounded-lg border border-petrol/20 bg-petrol/5 px-4 py-3">
+      <p className="text-sm font-medium mb-2">📲 Compartir app</p>
+      <p className="text-xs text-ink-soft mb-3">
+        Enviá este link a los publicadores para que instalen la app en su celular.
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <code className="flex-1 min-w-0 truncate font-mono text-xs bg-white border border-ink/10 rounded px-2 py-1.5">
+          {url}
+        </code>
+        <button
+          onClick={copiarLink}
+          className="font-mono text-xs border border-petrol/30 text-petrol rounded px-2.5 py-1.5 hover:bg-petrol/10 transition-colors shrink-0"
+        >
+          {copiado ? 'copiado ✓' : 'copiar'}
+        </button>
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 font-mono text-xs bg-[#25D366] text-white rounded px-2.5 py-1.5 hover:opacity-90 transition-opacity shrink-0"
+        >
+          WhatsApp
+        </a>
+      </div>
+    </div>
+  )
+}
+
 export default function Index() {
-  const { session } = useAuth()
+  const { session, puedeEditar } = useAuth()
   const [offset, setOffset] = useState(0)
   const [cargando, setCargando] = useState(true)
   const [datos, setDatos] = useState({
@@ -264,6 +308,8 @@ export default function Index() {
           <span className="font-mono text-xs text-gold">solicitar →</span>
         </Link>
       </div>
+
+      {puedeEditar('secretario') && <CompartirApp />}
 
       <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
         <div className="inline-flex items-center gap-3 rounded-full border border-gold/40 bg-gold-soft/20 px-4 py-1.5">

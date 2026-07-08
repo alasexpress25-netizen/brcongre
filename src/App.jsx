@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import GateIdentificacion from './components/GateIdentificacion'
+import InstalarAppBanner from './components/InstalarAppBanner'
 import Index from './pages/Index'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/precursor-auxiliar" element={<PrecursorAuxiliar />} />
       <Route path="/informes" element={<Informes />} />
       </Routes>
+      <InstalarAppBanner />
     </GateIdentificacion>
   )
 }
