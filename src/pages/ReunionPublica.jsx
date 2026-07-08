@@ -56,7 +56,7 @@ export default function ReunionPublica() {
         .select('*, presidente:presidente_id(nombre), conductor_atalaya:conductor_atalaya_id(nombre), lector:lector_id(nombre), orador:orador_id(nombre), tareas_mecanicas_reunion_publica(*)')
         .gte('fecha', new Date().toISOString().slice(0, 10))
         .order('fecha', { ascending: true }),
-      supabase.from('profiles').select('id, nombre').order('nombre'),
+      supabase.from('publicadores').select('id, nombre').eq('activo', true).order('nombre'),
     ])
     setReuniones(r || [])
     setPersonas(p || [])

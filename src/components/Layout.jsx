@@ -19,7 +19,8 @@ function linkClase({ isActive }) {
 
 export default function Layout({ children }) {
   const { config } = useConfig()
-  const { session, perfil, cerrarSesion, esAdmin } = useAuth()
+  const { session, perfil, cerrarSesion, esAdmin, puedeEditar } = useAuth()
+  const puedeGestionarPublicadores = puedeEditar('secretario')
   const [menuAbierto, setMenuAbierto] = useState(false)
 
   function cerrarMenu() {
@@ -50,6 +51,11 @@ export default function Layout({ children }) {
                   <Link to="/mis-asignaciones" className="hover:text-gold-soft transition-colors">
                     mis asignaciones
                   </Link>
+                  {puedeGestionarPublicadores && (
+                    <Link to="/publicadores" className="hover:text-gold-soft transition-colors">
+                      publicadores
+                    </Link>
+                  )}
                   {esAdmin && (
                     <Link to="/admin" className="hover:text-gold-soft transition-colors">
                       admin
@@ -92,6 +98,11 @@ export default function Layout({ children }) {
                     <Link to="/mis-asignaciones" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
                       mis asignaciones
                     </Link>
+                    {puedeGestionarPublicadores && (
+                      <Link to="/publicadores" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
+                        publicadores
+                      </Link>
+                    )}
                     {esAdmin && (
                       <Link to="/admin" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
                         admin

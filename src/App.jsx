@@ -3,6 +3,7 @@ import Index from './pages/Index'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
 import Admin from './pages/Admin'
+import Publicadores from './pages/Publicadores'
 import MisAsignaciones from './pages/MisAsignaciones'
 import Predicacion from './pages/Predicacion'
 import VidaMinisterio from './pages/VidaMinisterio'
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Registro />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/publicadores" element={<Publicadores />} />
       <Route path="/mis-asignaciones" element={<MisAsignaciones />} />
       <Route path="/predicacion" element={<Predicacion />} />
       <Route path="/vida-ministerio" element={<VidaMinisterio />} />

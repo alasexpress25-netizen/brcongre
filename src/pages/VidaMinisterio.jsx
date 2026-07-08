@@ -126,7 +126,7 @@ export default function VidaMinisterio() {
 
     setSemanas(sems || [])
 
-    const { data: perfiles } = await supabase.from('profiles').select('id, nombre').order('nombre')
+    const { data: perfiles } = await supabase.from('publicadores').select('id, nombre').eq('activo', true).order('nombre')
     setPersonas(perfiles || [])
     setCargando(false)
   }
