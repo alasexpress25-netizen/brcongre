@@ -93,6 +93,27 @@ export default function Admin() {
       setErrorCuenta(err)
       return
     }
+
+    // Le avisamos al usuario por mail que ya tiene una cuenta creada,
+    // con sus credenciales provisorias. Si el envío falla no bloqueamos
+    // el alta de la cuenta, solo lo dejamos en consola.
+    if (data?.id) {
+      supabase.functions
+        .invoke('notificar', {
+          body: {
+            userIds: [data.id],
+            asunto: 'Tu cuenta en Mi Congregación',
+            mensaje:
+              `Hola ${nuevaCuenta.nombre.trim()},\n\n` +
+              `Ya tenés una cuenta creada en la app de la congregación.\n\n` +
+              `Correo: ${nuevaCuenta.email.trim()}\n` +
+              `Contraseña provisoria: ${nuevaCuenta.password}\n\n` +
+              `Te recomendamos cambiar la contraseña la primera vez que entres.`,
+          },
+        })
+        .catch((e) => console.error('No se pudo notificar al nuevo usuario:', e))
+    }
+
     setNuevaCuenta(nuevaCuentaInicial)
     cargar()
   }
