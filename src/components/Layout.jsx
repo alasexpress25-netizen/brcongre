@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/vida-ministerio', label: 'Vida y Ministerio' },
   { to: '/reunion-publica', label: 'Reunión Pública' },
   { to: '/predicacion', label: 'Predicación' },
+  { to: '/territorios', label: 'Territorios' },
   { to: '/limpieza', label: 'Limpieza' },
   { to: '/anuncios', label: 'Anuncios' },
   { to: '/calendario', label: 'Calendario' },
@@ -22,7 +23,6 @@ export default function Layout({ children }) {
   const { config } = useConfig()
   const { session, perfil, cerrarSesion, esAdmin, puedeEditar } = useAuth()
   const puedeGestionarPublicadores = puedeEditar('secretario')
-  const puedeVerTerritorios = puedeEditar('predicacion')
   const [menuAbierto, setMenuAbierto] = useState(false)
   const identidad = getIdentidad()
 
@@ -96,11 +96,6 @@ export default function Layout({ children }) {
                     {puedeGestionarPublicadores && (
                       <Link to="/publicadores" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
                         publicadores
-                      </Link>
-                    )}
-                    {puedeVerTerritorios && (
-                      <Link to="/territorios" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
-                        territorios
                       </Link>
                     )}
                     {puedeGestionarPublicadores && (

@@ -37,9 +37,8 @@ export default function Territorios() {
   }
 
   useEffect(() => {
-    if (esEditor) cargar()
-    else setCargando(false)
-  }, [esEditor])
+    cargar()
+  }, [])
 
   function editar(t) {
     setForm({
@@ -111,21 +110,15 @@ export default function Territorios() {
     )
   }, [territorios, busqueda])
 
-  if (!esEditor) {
-    return (
-      <Layout>
-        <p className="text-ink-soft text-sm">Esta sección es solo para quienes tienen el permiso de predicación activo.</p>
-      </Layout>
-    )
-  }
-
   return (
     <Layout>
       <div className="flex items-center justify-between mb-1">
         <h1 className="font-display text-2xl font-semibold">Territorios</h1>
-        <button onClick={nuevo} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
-          + nuevo
-        </button>
+        {esEditor && (
+          <button onClick={nuevo} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
+            + nuevo
+          </button>
+        )}
       </div>
       <p className="text-sm text-ink-soft mb-6">{territorios.length} territorio(s) en total</p>
 
@@ -206,9 +199,11 @@ export default function Territorios() {
                   <p className="font-mono text-xs text-gold mt-0.5">Última predicación: {formatearFecha(t.ultima_predicacion)}</p>
                 )}
               </div>
-              <button onClick={() => editar(t)} className="font-mono text-xs text-ink-soft hover:text-petrol shrink-0">
-                editar
-              </button>
+              {esEditor && (
+                <button onClick={() => editar(t)} className="font-mono text-xs text-ink-soft hover:text-petrol shrink-0">
+                  editar
+                </button>
+              )}
             </div>
             {t.notas && <p className="text-sm text-ink-soft mt-2">{t.notas}</p>}
             <div className="flex gap-3 mt-3 font-mono text-xs">
