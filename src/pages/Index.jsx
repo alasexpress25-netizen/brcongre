@@ -248,6 +248,23 @@ export default function Index() {
 
   return (
     <Layout>
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Link
+          to="/informe-predicacion"
+          className="flex items-center justify-between gap-3 rounded-lg border border-petrol/20 bg-petrol/5 px-4 py-3 hover:border-petrol transition-colors"
+        >
+          <span className="text-sm font-medium">📝 Informe de Predicación</span>
+          <span className="font-mono text-xs text-petrol">enviar →</span>
+        </Link>
+        <Link
+          to="/precursor-auxiliar"
+          className="flex items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold-soft/10 px-4 py-3 hover:border-gold transition-colors"
+        >
+          <span className="text-sm font-medium">🙋 Precursorado Auxiliar</span>
+          <span className="font-mono text-xs text-gold">solicitar →</span>
+        </Link>
+      </div>
+
       <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
         <div className="inline-flex items-center gap-3 rounded-full border border-gold/40 bg-gold-soft/20 px-4 py-1.5">
           <button
@@ -305,7 +322,24 @@ export default function Index() {
                   <span>
                     Presidente <b className="text-ink"><NombreOFranja nombre={datos.vidaMinisterio.presidente?.nombre} /></b>
                   </span>
-                  {datos.vidaMinisterio.cantico_inicial && <span>🎵 {datos.vidaMinisterio.cantico_inicial}</span>}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs border-y border-ink/10 py-3">
+                  <div>
+                    <p className="text-ink-soft">🎵 Cántico inicial</p>
+                    <p className="text-sm text-ink">{datos.vidaMinisterio.cantico_inicial || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-ink-soft">Oración inicial</p>
+                    <p className="text-sm"><NombreOFranja nombre={datos.vidaMinisterio.oracion_inicial?.nombre} /></p>
+                  </div>
+                  <div>
+                    <p className="text-ink-soft">🎵 Cántico final</p>
+                    <p className="text-sm text-ink">{datos.vidaMinisterio.cantico_final || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-ink-soft">Oración final</p>
+                    <p className="text-sm"><NombreOFranja nombre={datos.vidaMinisterio.oracion_final?.nombre} /></p>
+                  </div>
                 </div>
                 <PartesResumen partes={datos.vidaMinisterio.partes_vida_ministerio || []} />
               </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { useConfig } from '../lib/useConfig'
+import AjusteFuente from './AjusteFuente'
 
 const NAV_ITEMS = [
   { to: '/vida-ministerio', label: 'Vida y Ministerio' },
@@ -132,6 +133,8 @@ export default function Layout({ children }) {
           )}
         </div>
       </footer>
+
+      <AjusteFuente />
     </div>
   )
 }

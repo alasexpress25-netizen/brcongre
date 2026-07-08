@@ -10,6 +10,8 @@ import ReunionPublica from './pages/ReunionPublica'
 import Limpieza from './pages/Limpieza'
 import Anuncios from './pages/Anuncios'
 import Calendario from './pages/Calendario'
+import InformePredicacion from './pages/InformePredicacion'
+import PrecursorAuxiliar from './pages/PrecursorAuxiliar'
 
 export default function App() {
   return (
@@ -25,6 +27,8 @@ export default function App() {
       <Route path="/limpieza" element={<Limpieza />} />
       <Route path="/anuncios" element={<Anuncios />} />
       <Route path="/calendario" element={<Calendario />} />
+      <Route path="/informe-predicacion" element={<InformePredicacion />} />
+      <Route path="/precursor-auxiliar" element={<PrecursorAuxiliar />} />
     </Routes>
   )
 }
