@@ -28,14 +28,11 @@ export default function GateIdentificacion({ children }) {
     if (!correo) return
     setEstado('buscando')
 
-    const { data } = await supabase
-      .from('publicadores')
-      .select('id, nombre, email, activo')
-      .ilike('email', correo)
-      .maybeSingle()
+    const { data } = await supabase.rpc('identificar_publicador', { p_email: correo })
+    const encontrado = Array.isArray(data) ? data[0] : data
 
-    if (data && data.activo) {
-      const nueva = { id: data.id, nombre: data.nombre, email: data.email }
+    if (encontrado && encontrado.activo) {
+      const nueva = { id: encontrado.id, nombre: encontrado.nombre, email: encontrado.email }
       setIdentidad(nueva)
       setIdentidadLocal(nueva)
       setEstado('idle')

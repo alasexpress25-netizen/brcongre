@@ -49,11 +49,8 @@ export default function MisAsignaciones() {
     let publicadorId = null
     let grupoId = null
     if (email) {
-      const { data: pub } = await supabase
-        .from('publicadores')
-        .select('id, grupo_id')
-        .ilike('email', email)
-        .maybeSingle()
+      const { data } = await supabase.rpc('identificar_publicador', { p_email: email })
+      const pub = Array.isArray(data) ? data[0] : data
       publicadorId = pub?.id || null
       grupoId = pub?.grupo_id || null
     }
