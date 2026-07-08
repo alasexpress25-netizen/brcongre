@@ -48,7 +48,7 @@ export default function Publicadores() {
   async function cargar() {
     setCargando(true)
     const [{ data }, { data: g }] = await Promise.all([
-      supabase.from('publicadores').select('*, grupos(nombre)').order('nombre'),
+      supabase.from('publicadores').select('*, grupos!publicadores_grupo_id_fkey(nombre)').order('nombre'),
       supabase.from('grupos').select('*').order('nombre'),
     ])
     setPublicadores(data || [])
