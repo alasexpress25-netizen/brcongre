@@ -14,6 +14,7 @@ import Anuncios from './pages/Anuncios'
 import Calendario from './pages/Calendario'
 import InformePredicacion from './pages/InformePredicacion'
 import PrecursorAuxiliar from './pages/PrecursorAuxiliar'
+import Informes from './pages/Informes'
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/calendario" element={<Calendario />} />
       <Route path="/informe-predicacion" element={<InformePredicacion />} />
       <Route path="/precursor-auxiliar" element={<PrecursorAuxiliar />} />
+      <Route path="/informes" element={<Informes />} />
     </Routes>
   )
 }

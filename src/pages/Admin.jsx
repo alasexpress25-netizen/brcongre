@@ -13,7 +13,7 @@ const secciones = [
   { key: 'limpieza', label: 'Limpieza' },
   { key: 'anuncios', label: 'Anuncios' },
   { key: 'calendario', label: 'Calendario' },
-  { key: 'secretario', label: 'Publicadores (datos de la congregación, incluye email de contacto)' },
+  { key: 'secretario', label: 'Publicadores e Informes (datos de la congregación, incluye email de contacto)' },
 ]
 
 const nuevaCuentaInicial = { nombre: '', email: '', password: '' }

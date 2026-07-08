@@ -72,6 +72,11 @@ export default function Layout({ children }) {
                         publicadores
                       </Link>
                     )}
+                    {puedeGestionarPublicadores && (
+                      <Link to="/informes" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
+                        informes
+                      </Link>
+                    )}
                     {esAdmin && (
                       <Link to="/admin" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
                         admin
