@@ -34,8 +34,9 @@ export default function InformePredicacion() {
 
   useEffect(() => {
     supabase
-      .from('profiles')
+      .from('publicadores')
       .select('id, nombre')
+      .eq('activo', true)
       .order('nombre')
       .then(({ data }) => setPublicadores(data || []))
   }, [])
@@ -49,21 +50,23 @@ export default function InformePredicacion() {
     setError('')
     setEnviando(true)
     const [mes, anio] = form.mesAnio.split('-').map(Number)
-    const { error: err } = await supabase.from('informes_predicacion').upsert(
-      {
-        publicador_id: form.publicador_id,
-        mes,
-        anio,
-        precursor_auxiliar: form.precursor_auxiliar,
-        participo: form.participo,
-        cursos_biblicos: Number(form.cursos_biblicos) || 0,
-        comentarios: form.comentarios || null,
-      },
-      { onConflict: 'publicador_id,mes,anio' }
-    )
+    const { error: err } = await supabase.rpc('enviar_informe_predicacion', {
+      p_publicador_id: form.publicador_id,
+      p_mes: mes,
+      p_anio: anio,
+      p_precursor_auxiliar: form.precursor_auxiliar,
+      p_participo: form.participo,
+      p_cursos_biblicos: Number(form.cursos_biblicos) || 0,
+      p_comentarios: form.comentarios || null,
+    })
     setEnviando(false)
     if (err) {
-      setError('No se pudo enviar el informe. Probá de nuevo.')
+      console.error('Error al enviar informe de predicación:', err)
+      setError(
+        err.code === '42501' || err.message?.toLowerCase().includes('row-level security')
+          ? 'No tenés permiso para enviar este informe. Avisale al administrador (falta una política de acceso en la base de datos).'
+          : `No se pudo enviar el informe. ${err.message || 'Probá de nuevo.'}`
+      )
       return
     }
     setEnviado(true)

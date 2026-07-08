@@ -33,8 +33,9 @@ export default function PrecursorAuxiliar() {
 
   useEffect(() => {
     supabase
-      .from('profiles')
+      .from('publicadores')
       .select('id, nombre')
+      .eq('activo', true)
       .order('nombre')
       .then(({ data }) => setPublicadores(data || []))
   }, [])
@@ -66,7 +67,12 @@ export default function PrecursorAuxiliar() {
     })
     setEnviando(false)
     if (err) {
-      setError('No se pudo enviar la solicitud. Probá de nuevo.')
+      console.error('Error al enviar solicitud de precursor auxiliar:', err)
+      setError(
+        err.code === '42501' || err.message?.toLowerCase().includes('row-level security')
+          ? 'No tenés permiso para enviar esta solicitud. Avisale al administrador (falta una política de acceso en la base de datos).'
+          : `No se pudo enviar la solicitud. ${err.message || 'Probá de nuevo.'}`
+      )
       return
     }
     setEnviado(true)
