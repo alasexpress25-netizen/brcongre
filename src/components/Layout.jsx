@@ -2,29 +2,54 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { useConfig } from '../lib/useConfig'
+import { useI18n } from '../lib/i18n/I18nContext'
 import { getIdentidad, limpiarIdentidad } from '../lib/identidad'
 import AjusteFuente from './AjusteFuente'
-
-const NAV_ITEMS = [
-  { to: '/vida-ministerio', label: 'Vida y Ministerio' },
-  { to: '/reunion-publica', label: 'Reunión Pública' },
-  { to: '/predicacion', label: 'Predicación' },
-  { to: '/territorios', label: 'Territorios' },
-  { to: '/limpieza', label: 'Limpieza' },
-  { to: '/anuncios', label: 'Anuncios' },
-  { to: '/calendario', label: 'Calendario' },
-]
 
 function linkClase({ isActive }) {
   return `hover:text-gold-soft transition-colors ${isActive ? 'text-gold-soft' : 'text-paper/80'}`
 }
 
+function SelectorIdioma() {
+  const { idioma, setIdioma, t } = useI18n()
+  return (
+    <div className="flex items-center gap-1 font-mono text-[11px]">
+      <button
+        onClick={() => setIdioma('es')}
+        aria-label={t('idioma.es')}
+        className={`px-1.5 py-0.5 rounded transition-colors ${idioma === 'es' ? 'bg-paper/20 text-paper' : 'text-paper/50 hover:text-paper/80'}`}
+      >
+        ES
+      </button>
+      <span className="text-paper/30">/</span>
+      <button
+        onClick={() => setIdioma('pt')}
+        aria-label={t('idioma.pt')}
+        className={`px-1.5 py-0.5 rounded transition-colors ${idioma === 'pt' ? 'bg-paper/20 text-paper' : 'text-paper/50 hover:text-paper/80'}`}
+      >
+        PT
+      </button>
+    </div>
+  )
+}
+
 export default function Layout({ children }) {
   const { config } = useConfig()
   const { session, perfil, cerrarSesion, esAdmin, puedeEditar } = useAuth()
+  const { t } = useI18n()
   const puedeGestionarPublicadores = puedeEditar('secretario')
   const [menuAbierto, setMenuAbierto] = useState(false)
   const identidad = getIdentidad()
+
+  const NAV_ITEMS = [
+    { to: '/vida-ministerio', label: t('nav.vidaMinisterio') },
+    { to: '/reunion-publica', label: t('nav.reunionPublica') },
+    { to: '/predicacion', label: t('nav.predicacion') },
+    { to: '/territorios', label: t('nav.territorios') },
+    { to: '/limpieza', label: t('nav.limpieza') },
+    { to: '/anuncios', label: t('nav.anuncios') },
+    { to: '/calendario', label: t('nav.calendario') },
+  ]
 
   function cambiarIdentidad() {
     limpiarIdentidad()
@@ -43,7 +68,7 @@ export default function Layout({ children }) {
       <header className="border-b border-ink/10 bg-petrol text-paper sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-5 py-3.5 flex items-center justify-between gap-4">
           <Link to="/" onClick={cerrarMenu} className="flex items-baseline gap-2 group shrink-0">
-            <span className="text-2xl group-hover:opacity-80 transition-opacity" title={config?.nombre || 'Inicio'}>🏠</span>
+            <span className="text-2xl group-hover:opacity-80 transition-opacity" title={config?.nombre || t('layout.inicio')}>🏠</span>
             {config?.nombre && (
               <span className="hidden sm:inline font-display text-sm text-paper/90 truncate max-w-[14rem]">
                 {config.nombre}
@@ -51,14 +76,17 @@ export default function Layout({ children }) {
             )}
           </Link>
 
-          <button
-            onClick={() => setMenuAbierto((v) => !v)}
-            aria-label={menuAbierto ? 'Cerrar menú' : 'Abrir menú'}
-            aria-expanded={menuAbierto}
-            className="text-xl leading-none w-9 h-9 flex items-center justify-center rounded-md hover:bg-paper/10 transition-colors shrink-0"
-          >
-            {menuAbierto ? '✕' : '☰'}
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            <SelectorIdioma />
+            <button
+              onClick={() => setMenuAbierto((v) => !v)}
+              aria-label={menuAbierto ? t('layout.cerrarMenu') : t('layout.abrirMenu')}
+              aria-expanded={menuAbierto}
+              className="text-xl leading-none w-9 h-9 flex items-center justify-center rounded-md hover:bg-paper/10 transition-colors"
+            >
+              {menuAbierto ? '✕' : '☰'}
+            </button>
+          </div>
         </div>
 
         {hayInfoSecundaria && (
@@ -67,10 +95,10 @@ export default function Layout({ children }) {
               {config.direccion && <span className="truncate max-w-[16rem]">📍 {config.direccion}</span>}
               {config.telefono_contacto && <span>📞 {config.telefono_contacto}</span>}
               {config.dia_reunion_publica && (
-                <span>🎙️ Reunión pública: {config.dia_reunion_publica}{config.hora_reunion_publica && ` · ${config.hora_reunion_publica}`}</span>
+                <span>🎙️ {t('layout.reunionPublicaCorta')}: {config.dia_reunion_publica}{config.hora_reunion_publica && ` · ${config.hora_reunion_publica}`}</span>
               )}
               {config.dia_vida_ministerio && (
-                <span>📖 Vida y Ministerio: {config.dia_vida_ministerio}{config.hora_vida_ministerio && ` · ${config.hora_vida_ministerio}`}</span>
+                <span>📖 {t('layout.vidaMinisterioCorta')}: {config.dia_vida_ministerio}{config.hora_vida_ministerio && ` · ${config.hora_vida_ministerio}`}</span>
               )}
             </div>
           </div>
@@ -88,29 +116,29 @@ export default function Layout({ children }) {
                 {session ? (
                   <>
                     <Link to="/mis-asignaciones" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
-                      mis asignaciones
+                      {t('layout.misAsignaciones')}
                     </Link>
                     <Link to="/mi-cuenta" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
-                      mi cuenta
+                      {t('layout.miCuenta')}
                     </Link>
                     {puedeGestionarPublicadores && (
                       <Link to="/publicadores" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
-                        publicadores
+                        {t('layout.publicadores')}
                       </Link>
                     )}
                     {puedeGestionarPublicadores && (
                       <Link to="/informes" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
-                        informes
+                        {t('layout.informes')}
                       </Link>
                     )}
                     {esAdmin && (
                       <Link to="/configuracion" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
-                        datos de la congregación
+                        {t('layout.datosCongregacion')}
                       </Link>
                     )}
                     {esAdmin && (
                       <Link to="/admin" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
-                        admin
+                        {t('layout.admin')}
                       </Link>
                     )}
                     <span className="text-paper/50">{perfil?.nombre}</span>
@@ -118,7 +146,7 @@ export default function Layout({ children }) {
                       onClick={() => { cerrarSesion(); cerrarMenu() }}
                       className="text-left underline decoration-gold-soft/50 hover:text-gold-soft transition-colors"
                     >
-                      salir
+                      {t('layout.salir')}
                     </button>
                   </>
                 ) : (
@@ -126,19 +154,19 @@ export default function Layout({ children }) {
                     {identidad?.nombre && (
                       <>
                         <Link to="/mis-asignaciones" onClick={cerrarMenu} className="hover:text-gold-soft transition-colors">
-                          mis asignaciones
+                          {t('layout.misAsignaciones')}
                         </Link>
                         <span className="text-paper/50">{identidad.nombre}</span>
                         <button
                           onClick={() => { cambiarIdentidad(); cerrarMenu() }}
                           className="text-left underline decoration-gold-soft/50 hover:text-gold-soft transition-colors"
                         >
-                          no soy yo, cambiar email
+                          {t('layout.noSoyYoCambiar')}
                         </button>
                       </>
                     )}
                     <Link to="/login" onClick={cerrarMenu} className="underline decoration-gold-soft/50 hover:text-gold-soft transition-colors">
-                      iniciar sesión
+                      {t('layout.iniciarSesion')}
                     </Link>
                   </>
                 )}
@@ -155,12 +183,12 @@ export default function Layout({ children }) {
           {config?.direccion && <span>{config.direccion}</span>}
           {config?.dia_reunion_publica && (
             <span>
-              Reunión pública: {config.dia_reunion_publica} · {config.hora_reunion_publica}
+              {t('layout.reunionPublicaCorta')}: {config.dia_reunion_publica} · {config.hora_reunion_publica}
             </span>
           )}
           {config?.dia_vida_ministerio && (
             <span>
-              Vida y Ministerio: {config.dia_vida_ministerio} · {config.hora_vida_ministerio}
+              {t('layout.vidaMinisterioCorta')}: {config.dia_vida_ministerio} · {config.hora_vida_ministerio}
             </span>
           )}
         </div>

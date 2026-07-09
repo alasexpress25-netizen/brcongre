@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
+import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
 
 const OPCIONES_CORTAS = { day: 'numeric', month: 'short' }
@@ -24,12 +25,12 @@ function toISO(d) {
   return d.toISOString().slice(0, 10)
 }
 
-function formatearRango(lunes, domingo) {
-  return `${lunes.toLocaleDateString('es-AR', OPCIONES_CORTAS)} — ${domingo.toLocaleDateString('es-AR', OPCIONES_CORTAS)}`
+function formatearRango(lunes, domingo, locale) {
+  return `${lunes.toLocaleDateString(locale, OPCIONES_CORTAS)} — ${domingo.toLocaleDateString(locale, OPCIONES_CORTAS)}`
 }
 
-function formatearFechaCorta(f) {
-  return new Date(f + 'T00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' })
+function formatearFechaCorta(f, locale) {
+  return new Date(f + 'T00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'short' })
 }
 
 function NombreOFranja({ nombre }) {
@@ -38,6 +39,7 @@ function NombreOFranja({ nombre }) {
 }
 
 function SeccionResumen({ icono, titulo, to, vacio, hayDatos, children }) {
+  const { t } = useI18n()
   return (
     <div className="rounded-lg border border-ink/10 bg-white overflow-hidden">
       <div className="bg-petrol text-paper px-4 py-2.5 flex items-center justify-between gap-3">
@@ -46,7 +48,7 @@ function SeccionResumen({ icono, titulo, to, vacio, hayDatos, children }) {
           <span className="truncate">{titulo}</span>
         </h2>
         <Link to={to} className="font-mono text-[11px] text-paper/70 hover:text-gold-soft transition-colors shrink-0">
-          ver más →
+          {t('index.verMas')}
         </Link>
       </div>
       <div className="p-4">
@@ -57,10 +59,11 @@ function SeccionResumen({ icono, titulo, to, vacio, hayDatos, children }) {
 }
 
 function PartesResumen({ partes }) {
+  const { t } = useI18n()
   const grupos = [
-    { key: 'tesoros', label: 'Tesoros de la Biblia' },
-    { key: 'ministerio', label: 'Seamos Mejores Maestros' },
-    { key: 'vida_cristiana', label: 'Nuestra Vida Cristiana' },
+    { key: 'tesoros', label: t('index.tesoros') },
+    { key: 'ministerio', label: t('index.ministerio') },
+    { key: 'vida_cristiana', label: t('index.vidaCristiana') },
   ]
   return (
     <div className="flex flex-col gap-3">
@@ -88,6 +91,7 @@ function PartesResumen({ partes }) {
 }
 
 function PredicacionResumen() {
+  const { t, locale } = useI18n()
   const [diaOffset, setDiaOffset] = useState(0)
   const [cargando, setCargando] = useState(true)
   const [salidas, setSalidas] = useState([])
@@ -121,25 +125,25 @@ function PredicacionResumen() {
       <div className="bg-petrol text-paper px-4 py-2.5 flex items-center justify-between gap-3">
         <h2 className="font-mono text-xs uppercase tracking-wider flex items-center gap-2 min-w-0">
           <span>🚪</span>
-          <span className="truncate">Predicación</span>
+          <span className="truncate">{t('index.predicacionTitulo')}</span>
         </h2>
         <Link to="/predicacion" className="font-mono text-[11px] text-paper/70 hover:text-gold-soft transition-colors shrink-0">
-          ver más →
+          {t('index.verMas')}
         </Link>
       </div>
 
       <div className="flex items-center justify-center gap-3 border-b border-ink/10 bg-paper-dim px-4 py-2">
         <button
           onClick={() => setDiaOffset((o) => o - 1)}
-          aria-label="Día anterior"
+          aria-label={t('index.diaAnterior')}
           className="text-gold hover:text-petrol transition-colors font-mono text-sm px-1"
         >
           ‹
         </button>
-        <span className="font-mono text-xs text-ink-soft capitalize">{formatearFechaCorta(diaISO)}</span>
+        <span className="font-mono text-xs text-ink-soft capitalize">{formatearFechaCorta(diaISO, locale())}</span>
         <button
           onClick={() => setDiaOffset((o) => o + 1)}
-          aria-label="Día siguiente"
+          aria-label={t('index.diaSiguiente')}
           className="text-gold hover:text-petrol transition-colors font-mono text-sm px-1"
         >
           ›
@@ -149,24 +153,24 @@ function PredicacionResumen() {
             onClick={() => setDiaOffset(0)}
             className="font-mono text-[11px] text-ink-soft underline decoration-gold/50 hover:text-petrol transition-colors ml-1"
           >
-            hoy
+            {t('index.hoy')}
           </button>
         )}
       </div>
 
       <div className="p-4">
         {cargando ? (
-          <p className="text-sm text-ink-soft/70">Cargando…</p>
+          <p className="text-sm text-ink-soft/70">{t('index.cargando')}</p>
         ) : salidas.length === 0 ? (
-          <p className="text-sm text-ink-soft/70">No hay salidas programadas este día.</p>
+          <p className="text-sm text-ink-soft/70">{t('index.sinSalidas')}</p>
         ) : (
           <div className="flex flex-col divide-y divide-ink/10">
             {salidas.map((s) => (
               <div key={s.id} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                  <p className="text-sm font-medium">{s.hora ? s.hora.slice(0, 5) : 'Sin horario'}</p>
+                  <p className="text-sm font-medium">{s.hora ? s.hora.slice(0, 5) : t('index.sinHorario')}</p>
                   <p className="text-xs text-ink-soft">
-                    {s.grupos?.nombre || 'Grupo general'}
+                    {s.grupos?.nombre || t('index.grupoGeneral')}
                     {s.punto_encuentro && ` · 📍 ${s.punto_encuentro}`}
                   </p>
                 </div>
@@ -181,9 +185,10 @@ function PredicacionResumen() {
 }
 
 function CompartirApp() {
+  const { t } = useI18n()
   const [copiado, setCopiado] = useState(false)
   const url = window.location.origin
-  const mensaje = `Instalá la app de la congregación 📱\n\n${url}\n\nEntrá desde el celular y tocá "Agregar a pantalla de inicio" (o "Instalar app") para tenerla como una app más.`
+  const mensaje = t('index.mensajeWhatsapp', { url })
 
   async function copiarLink() {
     try {
@@ -197,9 +202,9 @@ function CompartirApp() {
 
   return (
     <div className="mb-6 rounded-lg border border-petrol/20 bg-petrol/5 px-4 py-3">
-      <p className="text-sm font-medium mb-2">📲 Compartir app</p>
+      <p className="text-sm font-medium mb-2">{t('index.compartirApp')}</p>
       <p className="text-xs text-ink-soft mb-3">
-        Enviá este link a los publicadores para que instalen la app en su celular.
+        {t('index.compartirAppDescripcion')}
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <code className="flex-1 min-w-0 truncate font-mono text-xs bg-white border border-ink/10 rounded px-2 py-1.5">
@@ -209,7 +214,7 @@ function CompartirApp() {
           onClick={copiarLink}
           className="font-mono text-xs border border-petrol/30 text-petrol rounded px-2.5 py-1.5 hover:bg-petrol/10 transition-colors shrink-0"
         >
-          {copiado ? 'copiado ✓' : 'copiar'}
+          {copiado ? t('index.copiado') : t('index.copiar')}
         </button>
         <a
           href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`}
@@ -226,6 +231,7 @@ function CompartirApp() {
 
 export default function Index() {
   const { session, puedeEditar } = useAuth()
+  const { t, locale } = useI18n()
   const [offset, setOffset] = useState(0)
   const [cargando, setCargando] = useState(true)
   const [datos, setDatos] = useState({
@@ -297,15 +303,15 @@ export default function Index() {
           to="/informe-predicacion"
           className="flex items-center justify-between gap-3 rounded-lg border border-petrol/20 bg-petrol/5 px-4 py-3 hover:border-petrol transition-colors"
         >
-          <span className="text-sm font-medium">📝 Informe de Predicación</span>
-          <span className="font-mono text-xs text-petrol">enviar →</span>
+          <span className="text-sm font-medium">{t('index.informePredicacion')}</span>
+          <span className="font-mono text-xs text-petrol">{t('index.enviar')}</span>
         </Link>
         <Link
           to="/precursor-auxiliar"
           className="flex items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold-soft/10 px-4 py-3 hover:border-gold transition-colors"
         >
-          <span className="text-sm font-medium">🙋 Precursorado Auxiliar</span>
-          <span className="font-mono text-xs text-gold">solicitar →</span>
+          <span className="text-sm font-medium">{t('index.precursorAuxiliar')}</span>
+          <span className="font-mono text-xs text-gold">{t('index.solicitar')}</span>
         </Link>
       </div>
 
@@ -315,16 +321,16 @@ export default function Index() {
         <div className="inline-flex items-center gap-3 rounded-full border border-gold/40 bg-gold-soft/20 px-4 py-1.5">
           <button
             onClick={() => setOffset((o) => o - 1)}
-            aria-label="Semana anterior"
+            aria-label={t('index.semanaAnterior')}
             className="text-gold hover:text-petrol transition-colors font-mono text-sm px-1"
           >
             ‹
           </button>
-          <span className="font-mono text-xs uppercase tracking-wider text-gold">Semana</span>
-          <span className="font-mono text-xs text-ink-soft">{formatearRango(lunes, domingo)}</span>
+          <span className="font-mono text-xs uppercase tracking-wider text-gold">{t('index.semana')}</span>
+          <span className="font-mono text-xs text-ink-soft">{formatearRango(lunes, domingo, locale())}</span>
           <button
             onClick={() => setOffset((o) => o + 1)}
-            aria-label="Semana siguiente"
+            aria-label={t('index.semanaSiguiente')}
             className="text-gold hover:text-petrol transition-colors font-mono text-sm px-1"
           >
             ›
@@ -335,7 +341,7 @@ export default function Index() {
             onClick={() => setOffset(0)}
             className="font-mono text-xs text-ink-soft underline decoration-gold/50 hover:text-petrol transition-colors"
           >
-            volver a esta semana
+            {t('index.volverAEstaSemana')}
           </button>
         )}
       </div>
@@ -345,20 +351,20 @@ export default function Index() {
           to="/mis-asignaciones"
           className="mb-6 flex items-center justify-between gap-3 rounded-lg border border-ink/10 bg-white px-4 py-3 hover:border-petrol transition-colors"
         >
-          <span className="text-sm font-medium">✅ Mis asignaciones</span>
-          <span className="font-mono text-xs text-ink-soft">ver →</span>
+          <span className="text-sm font-medium">{t('index.misAsignaciones')}</span>
+          <span className="font-mono text-xs text-ink-soft">{t('index.ver')}</span>
         </Link>
       )}
 
       {cargando ? (
-        <p className="text-ink-soft text-sm">Cargando…</p>
+        <p className="text-ink-soft text-sm">{t('index.cargando')}</p>
       ) : (
         <div className="flex flex-col gap-4">
           <SeccionResumen
             icono="📖"
-            titulo="Vida y Ministerio"
+            titulo={t('index.vidaMinisterioTitulo')}
             to="/vida-ministerio"
-            vacio="Sin programa cargado para esta semana."
+            vacio={t('index.vidaMinisterioVacio')}
             hayDatos={!!datos.vidaMinisterio}
           >
             {datos.vidaMinisterio && (
@@ -366,24 +372,24 @@ export default function Index() {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-ink-soft">
                   {datos.vidaMinisterio.lectura_biblia && <span className="text-ink font-medium">{datos.vidaMinisterio.lectura_biblia}</span>}
                   <span>
-                    Presidente <b className="text-ink"><NombreOFranja nombre={datos.vidaMinisterio.presidente?.nombre} /></b>
+                    {t('index.presidente')} <b className="text-ink"><NombreOFranja nombre={datos.vidaMinisterio.presidente?.nombre} /></b>
                   </span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs border-y border-ink/10 py-3">
                   <div>
-                    <p className="text-ink-soft">🎵 Cántico inicial</p>
+                    <p className="text-ink-soft">{t('index.canticoInicial')}</p>
                     <p className="text-sm text-ink">{datos.vidaMinisterio.cantico_inicial || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-ink-soft">Oración inicial</p>
+                    <p className="text-ink-soft">{t('index.oracionInicial')}</p>
                     <p className="text-sm"><NombreOFranja nombre={datos.vidaMinisterio.oracion_inicial?.nombre} /></p>
                   </div>
                   <div>
-                    <p className="text-ink-soft">🎵 Cántico final</p>
+                    <p className="text-ink-soft">{t('index.canticoFinal')}</p>
                     <p className="text-sm text-ink">{datos.vidaMinisterio.cantico_final || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-ink-soft">Oración final</p>
+                    <p className="text-ink-soft">{t('index.oracionFinal')}</p>
                     <p className="text-sm"><NombreOFranja nombre={datos.vidaMinisterio.oracion_final?.nombre} /></p>
                   </div>
                 </div>
@@ -394,39 +400,39 @@ export default function Index() {
 
           <SeccionResumen
             icono="🎙️"
-            titulo="Reunión Pública"
+            titulo={t('index.reunionPublicaTitulo')}
             to="/reunion-publica"
-            vacio="Sin reunión pública cargada para esta semana."
+            vacio={t('index.sinReunionPublica')}
             hayDatos={!!datos.reunionPublica}
           >
             {datos.reunionPublica && (
               <div className="flex flex-col gap-3">
                 <div>
                   <p className="font-medium text-sm">
-                    {datos.reunionPublica.tema || 'Tema a confirmar'}{' '}
+                    {datos.reunionPublica.tema || t('index.temaAConfirmar')}{' '}
                     {datos.reunionPublica.numero_discurso && (
                       <span className="font-mono text-xs text-ink-soft">[{datos.reunionPublica.numero_discurso}]</span>
                     )}
                   </p>
-                  <p className="font-mono text-xs text-gold mt-0.5">{formatearFechaCorta(datos.reunionPublica.fecha)}</p>
+                  <p className="font-mono text-xs text-gold mt-0.5">{formatearFechaCorta(datos.reunionPublica.fecha, locale())}</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
                   <div>
-                    <p className="text-ink-soft">Orador</p>
+                    <p className="text-ink-soft">{t('index.orador')}</p>
                     <p className="text-sm text-ink">
                       {datos.reunionPublica.orador?.nombre || datos.reunionPublica.orador_nombre || '—'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-ink-soft">Presidente</p>
+                    <p className="text-ink-soft">{t('index.presidente')}</p>
                     <p className="text-sm"><NombreOFranja nombre={datos.reunionPublica.presidente?.nombre} /></p>
                   </div>
                   <div>
-                    <p className="text-ink-soft">Conductor Atalaya</p>
+                    <p className="text-ink-soft">{t('index.conductorAtalaya')}</p>
                     <p className="text-sm"><NombreOFranja nombre={datos.reunionPublica.conductor_atalaya?.nombre} /></p>
                   </div>
                   <div>
-                    <p className="text-ink-soft">Lector</p>
+                    <p className="text-ink-soft">{t('index.lector')}</p>
                     <p className="text-sm"><NombreOFranja nombre={datos.reunionPublica.lector?.nombre} /></p>
                   </div>
                 </div>
@@ -438,16 +444,16 @@ export default function Index() {
 
           <SeccionResumen
             icono="🧹"
-            titulo="Limpieza"
+            titulo={t('index.limpiezaTitulo')}
             to="/limpieza"
-            vacio="Sin turno de limpieza para esta semana."
+            vacio={t('index.sinTurnoLimpieza')}
             hayDatos={!!datos.limpieza}
           >
             {datos.limpieza && (
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium">{datos.limpieza.grupos?.nombre || 'Grupo sin asignar'}</p>
+                <p className="text-sm font-medium">{datos.limpieza.grupos?.nombre || t('index.grupoSinAsignar')}</p>
                 <p className="font-mono text-xs text-gold">
-                  {formatearRango(new Date(datos.limpieza.fecha_inicio + 'T00:00'), new Date(datos.limpieza.fecha_fin + 'T00:00'))}
+                  {formatearRango(new Date(datos.limpieza.fecha_inicio + 'T00:00'), new Date(datos.limpieza.fecha_fin + 'T00:00'), locale())}
                 </p>
               </div>
             )}
@@ -455,9 +461,9 @@ export default function Index() {
 
           <SeccionResumen
             icono="📌"
-            titulo="Anuncios"
+            titulo={t('index.anunciosTitulo')}
             to="/anuncios"
-            vacio="No hay anuncios publicados por el momento."
+            vacio={t('index.sinAnuncios')}
             hayDatos={datos.anuncios.length > 0}
           >
             <div className="flex flex-col gap-3">
@@ -472,9 +478,9 @@ export default function Index() {
 
           <SeccionResumen
             icono="📅"
-            titulo="Calendario"
+            titulo={t('index.calendarioTitulo')}
             to="/calendario"
-            vacio="No hay próximos eventos."
+            vacio={t('index.sinEventos')}
             hayDatos={datos.eventos.length > 0}
           >
             <div className="flex flex-col gap-2">
@@ -482,7 +488,7 @@ export default function Index() {
                 <div key={e.id} className="flex items-center justify-between gap-3">
                   <p className="text-sm">{e.titulo}</p>
                   <p className="font-mono text-xs text-ink-soft shrink-0">
-                    {new Date(e.fecha_inicio).toLocaleDateString('es-AR', OPCIONES_CORTAS)}
+                    {new Date(e.fecha_inicio).toLocaleDateString(locale(), OPCIONES_CORTAS)}
                   </p>
                 </div>
               ))}

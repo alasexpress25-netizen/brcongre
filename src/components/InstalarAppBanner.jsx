@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '../lib/i18n/I18nContext'
 
 const CLAVE_DESCARTADO = 'instalarApp:descartadoHasta'
 const DIAS_ESPERA = 7
@@ -26,6 +27,7 @@ function descartar() {
 }
 
 export default function InstalarAppBanner() {
+  const { t } = useI18n()
   const [eventoInstalacion, setEventoInstalacion] = useState(null)
   const [mostrarIOS, setMostrarIOS] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -69,14 +71,11 @@ export default function InstalarAppBanner() {
       <div className="flex items-start gap-3">
         <span className="text-2xl leading-none">📲</span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium">Instalá la app</p>
+          <p className="text-sm font-medium">{t('instalarApp.titulo')}</p>
           {mostrarIOS ? (
-            <p className="text-xs text-ink-soft mt-1">
-              Tocá el ícono <span className="font-mono">Compartir</span> de Safari y elegí{' '}
-              <span className="font-medium">"Agregar a pantalla de inicio"</span>.
-            </p>
+            <p className="text-xs text-ink-soft mt-1">{t('instalarApp.descripcionIOS')}</p>
           ) : (
-            <p className="text-xs text-ink-soft mt-1">Agregala a tu pantalla de inicio para acceder más rápido.</p>
+            <p className="text-xs text-ink-soft mt-1">{t('instalarApp.descripcionAndroid')}</p>
           )}
           <div className="flex items-center gap-2 mt-2">
             {!mostrarIOS && (
@@ -84,14 +83,14 @@ export default function InstalarAppBanner() {
                 onClick={instalar}
                 className="font-mono text-xs bg-petrol text-paper rounded px-3 py-1.5 hover:opacity-90 transition-opacity"
               >
-                Instalar
+                {t('instalarApp.instalar')}
               </button>
             )}
             <button
               onClick={cerrar}
               className="font-mono text-xs text-ink-soft hover:text-petrol transition-colors px-2 py-1.5"
             >
-              Ahora no
+              {t('instalarApp.ahoraNo')}
             </button>
           </div>
         </div>
