@@ -195,7 +195,7 @@ export default function Layout({ children }) {
         </div>
 
         <div className="border-t border-ink/10">
-          <div className="max-w-4xl mx-auto px-5 py-4 flex items-center justify-center gap-3 text-center">
+          <div className="max-w-4xl mx-auto px-5 pt-4 pb-24 md:pb-4 flex items-center justify-center gap-3 text-center">
             <a
               href="https://lavisualmk.alastecno.com"
               target="_blank"

@@ -22,7 +22,7 @@ export default function AjusteFuente() {
   }, [indice])
 
   return (
-    <div className="md:hidden fixed bottom-4 left-4 z-40">
+    <div className="md:hidden fixed bottom-24 left-4 z-40">
       {abierto && (
         <div className="mb-2 flex items-center gap-3 rounded-full border border-ink/10 bg-white shadow-lg px-4 py-3">
           <span className="text-xs font-semibold text-ink-soft">A</span>
