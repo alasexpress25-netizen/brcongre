@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
+import { useI18n } from '../lib/i18n/I18nContext'
 
 export default function Registro() {
   const { registrarse } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
@@ -19,7 +21,7 @@ export default function Registro() {
     setEnviando(true)
     const { error } = await registrarse(nombre, email, password)
     setEnviando(false)
-    if (error) setError(error.message === 'User already registered' ? 'Ese correo ya está registrado.' : 'No se pudo crear la cuenta. Probá de nuevo.')
+    if (error) setError(error.message === 'User already registered' ? t('registro.correoRegistrado') : t('registro.errorGenerico'))
     else setListo(true)
   }
 
@@ -27,13 +29,10 @@ export default function Registro() {
     return (
       <Layout>
         <div className="max-w-sm mx-auto text-center">
-          <h1 className="font-display text-2xl font-semibold mb-2">Cuenta creada</h1>
-          <p className="text-sm text-ink-soft mb-6">
-            Ya podés iniciar sesión. Un administrador tiene que habilitar tu acceso antes de que puedas editar contenido —
-            mientras tanto podés ver todo el sitio con normalidad.
-          </p>
+          <h1 className="font-display text-2xl font-semibold mb-2">{t('registro.cuentaCreadaTitulo')}</h1>
+          <p className="text-sm text-ink-soft mb-6">{t('registro.cuentaCreadaTexto')}</p>
           <button onClick={() => navigate('/login')} className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">
-            Ir a iniciar sesión
+            {t('registro.irAIniciarSesion')}
           </button>
         </div>
       </Layout>
@@ -43,14 +42,12 @@ export default function Registro() {
   return (
     <Layout>
       <div className="max-w-sm mx-auto">
-        <h1 className="font-display text-2xl font-semibold mb-1">Crear cuenta</h1>
-        <p className="text-sm text-ink-soft mb-6">
-          Para ver tus asignaciones personales y, si te habilitan, editar contenido.
-        </p>
+        <h1 className="font-display text-2xl font-semibold mb-1">{t('registro.titulo')}</h1>
+        <p className="text-sm text-ink-soft mb-6">{t('registro.subtitulo')}</p>
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <input
             required
-            placeholder="Nombre y apellido"
+            placeholder={t('registro.nombreYApellido')}
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             className="border border-ink/15 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-petrol"
@@ -58,7 +55,7 @@ export default function Registro() {
           <input
             type="email"
             required
-            placeholder="Correo electrónico"
+            placeholder={t('registro.correo')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="border border-ink/15 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-petrol"
@@ -67,7 +64,7 @@ export default function Registro() {
             type="password"
             required
             minLength={6}
-            placeholder="Contraseña (mínimo 6 caracteres)"
+            placeholder={t('registro.contrasena')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="border border-ink/15 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-petrol"
@@ -78,11 +75,11 @@ export default function Registro() {
             disabled={enviando}
             className="bg-petrol text-paper rounded-md py-2 font-medium hover:bg-petrol-dark transition-colors disabled:opacity-50"
           >
-            {enviando ? 'Creando…' : 'Crear cuenta'}
+            {enviando ? t('registro.creando') : t('registro.crearCuenta')}
           </button>
         </form>
         <p className="text-sm text-ink-soft mt-4 text-center">
-          ¿Ya tenés cuenta? <Link to="/login" className="text-petrol underline">Iniciar sesión</Link>
+          {t('registro.yaTenesCuenta')} <Link to="/login" className="text-petrol underline">{t('registro.iniciarSesion')}</Link>
         </p>
       </div>
     </Layout>

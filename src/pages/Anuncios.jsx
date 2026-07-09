@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
+import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
 
 const vacio = { titulo: '', descripcion: '', link_url: '' }
 
 export default function Anuncios() {
   const { puedeEditar } = useAuth()
+  const { t } = useI18n()
   const esEditor = puedeEditar('anuncios')
   const [anuncios, setAnuncios] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -56,7 +58,7 @@ export default function Anuncios() {
   }
 
   async function eliminar(id) {
-    if (!confirm('¿Eliminar este anuncio?')) return
+    if (!confirm(t('anuncios.confirmarEliminar'))) return
     await supabase.from('anuncios').update({ activo: false }).eq('id', id)
     cargar()
   }
@@ -64,13 +66,13 @@ export default function Anuncios() {
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl font-semibold">Anuncios</h1>
+        <h1 className="font-display text-2xl font-semibold">{t('anuncios.titulo')}</h1>
         {esEditor && (
           <button
             onClick={nuevo}
             className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors"
           >
-            + nuevo
+            {t('comun.nuevo')}
           </button>
         )}
       </div>
@@ -79,42 +81,42 @@ export default function Anuncios() {
         <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
           <input
             required
-            placeholder="Título"
+            placeholder={t('anuncios.tituloCampo')}
             value={form.titulo}
             onChange={(e) => setForm({ ...form, titulo: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
           />
           <textarea
-            placeholder="Descripción (opcional)"
+            placeholder={t('anuncios.descripcionOpcional')}
             value={form.descripcion}
             onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
             rows={2}
           />
           <input
-            placeholder="Link al documento (Drive, PDF, etc.)"
+            placeholder={t('anuncios.linkDocumento')}
             value={form.link_url}
             onChange={(e) => setForm({ ...form, link_url: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
           />
           <div className="flex gap-2">
             <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
-              Guardar
+              {t('comun.guardar')}
             </button>
             <button
               type="button"
               onClick={() => setMostrarForm(false)}
               className="text-ink-soft text-sm px-4 py-2 hover:text-ink transition-colors"
             >
-              Cancelar
+              {t('comun.cancelar')}
             </button>
           </div>
         </form>
       )}
 
-      {cargando && <p className="text-ink-soft text-sm">Cargando…</p>}
+      {cargando && <p className="text-ink-soft text-sm">{t('comun.cargando')}</p>}
       {!cargando && anuncios.length === 0 && (
-        <p className="text-ink-soft text-sm">No hay anuncios publicados por el momento.</p>
+        <p className="text-ink-soft text-sm">{t('anuncios.sinAnuncios')}</p>
       )}
 
       <div className="flex flex-col gap-3">
@@ -125,10 +127,10 @@ export default function Anuncios() {
               {esEditor && (
                 <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0">
                   <button onClick={() => editar(a)} className="hover:text-petrol">
-                    editar
+                    {t('comun.editar')}
                   </button>
                   <button onClick={() => eliminar(a.id)} className="hover:text-clay">
-                    borrar
+                    {t('comun.borrar')}
                   </button>
                 </div>
               )}
@@ -141,7 +143,7 @@ export default function Anuncios() {
                 rel="noreferrer"
                 className="inline-block mt-2 font-mono text-xs text-petrol underline decoration-gold/50 hover:text-petrol-dark"
               >
-                ver documento →
+                {t('comun.verDocumento')}
               </a>
             )}
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
+import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
 
 const vacio = {
@@ -11,13 +12,14 @@ const vacio = {
   link_mapa: '',
 }
 
-function formatearFecha(f) {
+function formatearFecha(f, locale) {
   if (!f) return ''
-  return new Date(f + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(f + 'T00:00').toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export default function Territorios() {
   const { puedeEditar } = useAuth()
+  const { t, locale } = useI18n()
   const esEditor = puedeEditar('predicacion')
 
   const [territorios, setTerritorios] = useState([])
@@ -40,15 +42,15 @@ export default function Territorios() {
     cargar()
   }, [])
 
-  function editar(t) {
+  function editar(terr) {
     setForm({
-      numero: t.numero ?? '',
-      ultima_predicacion: t.ultima_predicacion || '',
-      notas: t.notas || '',
-      link_territorio: t.link_territorio || '',
-      link_mapa: t.link_mapa || '',
+      numero: terr.numero ?? '',
+      ultima_predicacion: terr.ultima_predicacion || '',
+      notas: terr.notas || '',
+      link_territorio: terr.link_territorio || '',
+      link_mapa: terr.link_mapa || '',
     })
-    setEditandoId(t.id)
+    setEditandoId(terr.id)
     setError('')
     setMostrarForm(true)
   }
@@ -79,7 +81,7 @@ export default function Territorios() {
 
     setGuardando(false)
     if (err) {
-      setError(err.message.includes('duplicate') ? 'Ya existe un territorio con ese número.' : err.message)
+      setError(err.message.includes('duplicate') ? t('territorios.numeroDuplicado') : err.message)
       return
     }
     setMostrarForm(false)
@@ -90,10 +92,10 @@ export default function Territorios() {
 
   async function eliminar() {
     if (!editandoId) return
-    if (!confirm('¿Eliminar este territorio? Se quitará también de las salidas donde esté anexado.')) return
+    if (!confirm(t('territorios.confirmarEliminar'))) return
     const { error: err } = await supabase.from('territorios').delete().eq('id', editandoId)
     if (err) {
-      alert('No se pudo eliminar: ' + err.message)
+      alert(t('territorios.noSePudoEliminar') + err.message)
       return
     }
     setMostrarForm(false)
@@ -106,21 +108,21 @@ export default function Territorios() {
     const q = busqueda.trim().toLowerCase()
     if (!q) return territorios
     return territorios.filter(
-      (t) => String(t.numero).includes(q) || t.notas?.toLowerCase().includes(q)
+      (terr) => String(terr.numero).includes(q) || terr.notas?.toLowerCase().includes(q)
     )
   }, [territorios, busqueda])
 
   return (
     <Layout>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl font-semibold">Territorios</h1>
+        <h1 className="font-display text-2xl font-semibold">{t('territorios.titulo')}</h1>
         {esEditor && (
           <button onClick={nuevo} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
-            + nuevo
+            {t('comun.nuevo')}
           </button>
         )}
       </div>
-      <p className="text-sm text-ink-soft mb-6">{territorios.length} territorio(s) en total</p>
+      <p className="text-sm text-ink-soft mb-6">{territorios.length} {t('territorios.totalTerritorios')}</p>
 
       {mostrarForm && (
         <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
@@ -129,13 +131,13 @@ export default function Territorios() {
             <input
               required
               type="number"
-              placeholder="Número"
+              placeholder={t('territorios.numero')}
               value={form.numero}
               onChange={(e) => setForm({ ...form, numero: e.target.value })}
               className="w-32 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
             />
             <div className="flex-1">
-              <label className="text-xs text-ink-soft font-mono block mb-1">Última vez predicado</label>
+              <label className="text-xs text-ink-soft font-mono block mb-1">{t('territorios.ultimaVezPredicado')}</label>
               <input
                 type="date"
                 value={form.ultima_predicacion}
@@ -145,19 +147,19 @@ export default function Territorios() {
             </div>
           </div>
           <input
-            placeholder="Link del territorio (imagen / tarjeta del territorio)"
+            placeholder={t('territorios.linkTerritorio')}
             value={form.link_territorio}
             onChange={(e) => setForm({ ...form, link_territorio: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
           />
           <input
-            placeholder="Link del mapa (territorio completo)"
+            placeholder={t('territorios.linkMapa')}
             value={form.link_mapa}
             onChange={(e) => setForm({ ...form, link_mapa: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
           />
           <textarea
-            placeholder="Notas"
+            placeholder={t('territorios.notas')}
             value={form.notas}
             onChange={(e) => setForm({ ...form, notas: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
@@ -165,14 +167,14 @@ export default function Territorios() {
           />
           <div className="flex gap-2">
             <button type="submit" disabled={guardando} className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors disabled:opacity-50">
-              {guardando ? 'guardando…' : 'Guardar'}
+              {guardando ? t('territorios.guardando') : t('comun.guardar')}
             </button>
             <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">
-              Cancelar
+              {t('comun.cancelar')}
             </button>
             {editandoId && (
               <button type="button" onClick={eliminar} className="text-clay text-sm px-4 py-2 hover:text-clay/80 ml-auto">
-                Borrar territorio
+                {t('territorios.borrarTerritorio')}
               </button>
             )}
           </div>
@@ -180,41 +182,41 @@ export default function Territorios() {
       )}
 
       <input
-        placeholder="Buscar por número o notas…"
+        placeholder={t('territorios.buscar')}
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
         className="w-full border border-ink/15 rounded-md px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-petrol"
       />
 
-      {cargando && <p className="text-ink-soft text-sm">Cargando…</p>}
-      {!cargando && filtrados.length === 0 && <p className="text-ink-soft text-sm">No hay territorios para mostrar.</p>}
+      {cargando && <p className="text-ink-soft text-sm">{t('comun.cargando')}</p>}
+      {!cargando && filtrados.length === 0 && <p className="text-ink-soft text-sm">{t('territorios.sinTerritorios')}</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {filtrados.map((t) => (
-          <div key={t.id} className="border border-ink/10 rounded-lg bg-white p-4">
+        {filtrados.map((terr) => (
+          <div key={terr.id} className="border border-ink/10 rounded-lg bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-display text-lg font-semibold">Territorio {t.numero}</h3>
-                {t.ultima_predicacion && (
-                  <p className="font-mono text-xs text-gold mt-0.5">Última predicación: {formatearFecha(t.ultima_predicacion)}</p>
+                <h3 className="font-display text-lg font-semibold">{t('territorios.territorioNumero')} {terr.numero}</h3>
+                {terr.ultima_predicacion && (
+                  <p className="font-mono text-xs text-gold mt-0.5">{t('territorios.ultimaPredicacion')}: {formatearFecha(terr.ultima_predicacion, locale())}</p>
                 )}
               </div>
               {esEditor && (
-                <button onClick={() => editar(t)} className="font-mono text-xs text-ink-soft hover:text-petrol shrink-0">
-                  editar
+                <button onClick={() => editar(terr)} className="font-mono text-xs text-ink-soft hover:text-petrol shrink-0">
+                  {t('comun.editar')}
                 </button>
               )}
             </div>
-            {t.notas && <p className="text-sm text-ink-soft mt-2">{t.notas}</p>}
+            {terr.notas && <p className="text-sm text-ink-soft mt-2">{terr.notas}</p>}
             <div className="flex gap-3 mt-3 font-mono text-xs">
-              {t.link_territorio && (
-                <a href={t.link_territorio} target="_blank" rel="noreferrer" className="text-petrol underline hover:text-petrol-dark">
-                  ver territorio
+              {terr.link_territorio && (
+                <a href={terr.link_territorio} target="_blank" rel="noreferrer" className="text-petrol underline hover:text-petrol-dark">
+                  {t('territorios.verTerritorio')}
                 </a>
               )}
-              {t.link_mapa && (
-                <a href={t.link_mapa} target="_blank" rel="noreferrer" className="text-petrol underline hover:text-petrol-dark">
-                  ver mapa
+              {terr.link_mapa && (
+                <a href={terr.link_mapa} target="_blank" rel="noreferrer" className="text-petrol underline hover:text-petrol-dark">
+                  {t('territorios.verMapa')}
                 </a>
               )}
             </div>
