@@ -5,6 +5,7 @@ import { useConfig } from '../lib/useConfig'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { getIdentidad, limpiarIdentidad } from '../lib/identidad'
 import AjusteFuente from './AjusteFuente'
+import logoLaVisual from '../assets/logo-lavisual.png'
 
 function linkClase({ isActive }) {
   return `hover:text-gold-soft transition-colors ${isActive ? 'text-gold-soft' : 'text-paper/80'}`
@@ -191,6 +192,23 @@ export default function Layout({ children }) {
               {t('layout.vidaMinisterioCorta')}: {config.dia_vida_ministerio} · {config.hora_vida_ministerio}
             </span>
           )}
+        </div>
+
+        <div className="border-t border-ink/10">
+          <div className="max-w-4xl mx-auto px-5 py-4 flex items-center justify-center gap-3 text-center">
+            <a
+              href="https://lavisualmk.alastecno.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 opacity-80 hover:opacity-100 transition-opacity"
+              aria-label="La Visual Mk"
+            >
+              <img src={logoLaVisual} alt="La Visual Mk" className="h-9 w-auto" />
+            </a>
+            <span className="text-xs text-ink-soft font-mono max-w-xs">
+              {t('footer.disenadoPor')}
+            </span>
+          </div>
         </div>
       </footer>
 

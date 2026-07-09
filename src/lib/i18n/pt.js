@@ -87,6 +87,9 @@ export const pt = {
     reunionPublicaCorta: 'Reunião pública',
     vidaMinisterioCorta: 'Vida e Ministério',
   },
+  footer: {
+    disenadoPor: 'Desenhado e criado por La Visual Mk, clique no logo para mais informações',
+  },
   login: {
     titulo: 'Acesso de editores',
     subtitulo: 'Somente para admin e anciãos que atualizam o conteúdo.',
