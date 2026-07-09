@@ -88,7 +88,8 @@ export const es = {
     vidaMinisterioCorta: 'Vida y Ministerio',
   },
   footer: {
-    disenadoPor: 'Diseñado y creado por La Visual Mk, click en el logo para más información',
+    disenadoPor: 'Diseñado y creado por La Visual Mk',
+    clickLogo: 'Click en el logo para más información',
   },
   login: {
     titulo: 'Acceso de editores',

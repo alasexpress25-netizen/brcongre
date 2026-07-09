@@ -205,8 +205,9 @@ export default function Layout({ children }) {
             >
               <img src={logoLaVisual} alt="La Visual Mk" className="h-9 w-auto" />
             </a>
-            <span className="text-xs text-ink-soft font-mono max-w-xs">
-              {t('footer.disenadoPor')}
+            <span className="text-xs text-ink-soft font-mono max-w-xs flex flex-col">
+              <span>{t('footer.disenadoPor')}</span>
+              <span>{t('footer.clickLogo')}</span>
             </span>
           </div>
         </div>
