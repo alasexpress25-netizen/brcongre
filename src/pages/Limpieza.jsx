@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
+import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
 import { notificar } from '../lib/notificar'
 
 const vacio = { grupo_id: '', fecha_inicio: '', fecha_fin: '', notas: '' }
 
-function formatearRango(inicio, fin) {
+function formatearRango(inicio, fin, locale) {
   const opciones = { day: 'numeric', month: 'short' }
-  return `${new Date(inicio + 'T00:00').toLocaleDateString('es-AR', opciones)} — ${new Date(fin + 'T00:00').toLocaleDateString('es-AR', opciones)}`
+  return `${new Date(inicio + 'T00:00').toLocaleDateString(locale, opciones)} — ${new Date(fin + 'T00:00').toLocaleDateString(locale, opciones)}`
 }
 
 export default function Limpieza() {
   const { puedeEditar } = useAuth()
+  const { t, locale } = useI18n()
   const esEditor = puedeEditar('limpieza')
   const [turnos, setTurnos] = useState([])
   const [grupos, setGrupos] = useState([])
@@ -23,7 +25,7 @@ export default function Limpieza() {
 
   async function cargar() {
     setCargando(true)
-    const [{ data: t }, { data: g }] = await Promise.all([
+    const [{ data: tu }, { data: g }] = await Promise.all([
       supabase
         .from('turnos_limpieza')
         .select('*, grupos(nombre)')
@@ -31,7 +33,7 @@ export default function Limpieza() {
         .order('fecha_inicio', { ascending: true }),
       supabase.from('grupos').select('*').order('nombre'),
     ])
-    setTurnos(t || [])
+    setTurnos(tu || [])
     setGrupos(g || [])
     setCargando(false)
   }
@@ -40,9 +42,9 @@ export default function Limpieza() {
     cargar()
   }, [])
 
-  function editar(t) {
-    setForm({ grupo_id: t.grupo_id || '', fecha_inicio: t.fecha_inicio, fecha_fin: t.fecha_fin, notas: t.notas || '' })
-    setEditandoId(t.id)
+  function editar(tu) {
+    setForm({ grupo_id: tu.grupo_id || '', fecha_inicio: tu.fecha_inicio, fecha_fin: tu.fecha_fin, notas: tu.notas || '' })
+    setEditandoId(tu.id)
     setMostrarForm(true)
   }
 
@@ -66,11 +68,13 @@ export default function Limpieza() {
         .eq('grupo_id', payload.grupo_id)
         .eq('activo', true)
         .not('email', 'is', null)
-      const grupoNombre = grupos.find((g) => g.id === payload.grupo_id)?.nombre || 'tu grupo'
+      const grupoNombre = grupos.find((g) => g.id === payload.grupo_id)?.nombre || t('limpieza.tuGrupo')
+      const desde = new Date(payload.fecha_inicio + 'T00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'long' })
+      const hasta = new Date(payload.fecha_fin + 'T00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'long' })
       notificar(
         miembros?.map((m) => m.id),
-        `Turno de limpieza asignado a ${grupoNombre}`,
-        `Le corresponde la limpieza del salón del ${new Date(payload.fecha_inicio + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} al ${new Date(payload.fecha_fin + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}.`
+        t('limpieza.notifTitulo', { grupo: grupoNombre }),
+        t('limpieza.notifCuerpo', { desde, hasta })
       )
     }
 
@@ -81,7 +85,7 @@ export default function Limpieza() {
   }
 
   async function eliminar(id) {
-    if (!confirm('¿Eliminar este turno?')) return
+    if (!confirm(t('limpieza.confirmarEliminar'))) return
     await supabase.from('turnos_limpieza').delete().eq('id', id)
     cargar()
   }
@@ -89,18 +93,16 @@ export default function Limpieza() {
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl font-semibold">Limpieza del Salón</h1>
+        <h1 className="font-display text-2xl font-semibold">{t('limpieza.titulo')}</h1>
         {esEditor && (
           <button onClick={nuevo} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
-            + nuevo
+            {t('comun.nuevo')}
           </button>
         )}
       </div>
 
       {esEditor && grupos.length === 0 && (
-        <p className="text-sm text-clay mb-4">
-          Todavía no hay grupos creados. Pedile al admin que los cree desde el Panel de administración.
-        </p>
+        <p className="text-sm text-clay mb-4">{t('limpieza.sinGrupos')}</p>
       )}
 
       {mostrarForm && (
@@ -111,14 +113,14 @@ export default function Limpieza() {
             onChange={(e) => setForm({ ...form, grupo_id: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
           >
-            <option value="">Seleccionar grupo responsable</option>
+            <option value="">{t('limpieza.seleccionarGrupo')}</option>
             {grupos.map((g) => (
               <option key={g.id} value={g.id}>{g.nombre}</option>
             ))}
           </select>
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="text-xs text-ink-soft">Desde</label>
+              <label className="text-xs text-ink-soft">{t('limpieza.desde')}</label>
               <input
                 required
                 type="date"
@@ -128,7 +130,7 @@ export default function Limpieza() {
               />
             </div>
             <div className="flex-1">
-              <label className="text-xs text-ink-soft">Hasta</label>
+              <label className="text-xs text-ink-soft">{t('limpieza.hasta')}</label>
               <input
                 required
                 type="date"
@@ -139,7 +141,7 @@ export default function Limpieza() {
             </div>
           </div>
           <textarea
-            placeholder="Notas (opcional)"
+            placeholder={t('limpieza.notasOpcional')}
             value={form.notas}
             onChange={(e) => setForm({ ...form, notas: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
@@ -147,34 +149,34 @@ export default function Limpieza() {
           />
           <div className="flex gap-2">
             <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
-              Guardar
+              {t('comun.guardar')}
             </button>
             <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">
-              Cancelar
+              {t('comun.cancelar')}
             </button>
           </div>
         </form>
       )}
 
-      {cargando && <p className="text-ink-soft text-sm">Cargando…</p>}
-      {!cargando && turnos.length === 0 && <p className="text-ink-soft text-sm">No hay turnos próximos cargados.</p>}
+      {cargando && <p className="text-ink-soft text-sm">{t('comun.cargando')}</p>}
+      {!cargando && turnos.length === 0 && <p className="text-ink-soft text-sm">{t('limpieza.sinTurnos')}</p>}
 
       <div className="flex flex-col gap-3">
-        {turnos.map((t) => (
-          <div key={t.id} className="border border-ink/10 rounded-lg bg-white p-4">
+        {turnos.map((tu) => (
+          <div key={tu.id} className="border border-ink/10 rounded-lg bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-display text-lg font-semibold">{t.grupos?.nombre || 'Grupo sin asignar'}</h3>
-                <p className="font-mono text-xs text-gold mt-0.5">{formatearRango(t.fecha_inicio, t.fecha_fin)}</p>
+                <h3 className="font-display text-lg font-semibold">{tu.grupos?.nombre || t('limpieza.grupoSinAsignar')}</h3>
+                <p className="font-mono text-xs text-gold mt-0.5">{formatearRango(tu.fecha_inicio, tu.fecha_fin, locale())}</p>
               </div>
               {esEditor && (
                 <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0">
-                  <button onClick={() => editar(t)} className="hover:text-petrol">editar</button>
-                  <button onClick={() => eliminar(t.id)} className="hover:text-clay">borrar</button>
+                  <button onClick={() => editar(tu)} className="hover:text-petrol">{t('comun.editar')}</button>
+                  <button onClick={() => eliminar(tu.id)} className="hover:text-clay">{t('comun.borrar')}</button>
                 </div>
               )}
             </div>
-            {t.notas && <p className="text-sm text-ink-soft mt-1">{t.notas}</p>}
+            {tu.notas && <p className="text-sm text-ink-soft mt-1">{tu.notas}</p>}
           </div>
         ))}
       </div>

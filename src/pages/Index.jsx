@@ -34,8 +34,9 @@ function formatearFechaCorta(f, locale) {
 }
 
 function NombreOFranja({ nombre }) {
+  const { t } = useI18n()
   if (nombre) return <span>{nombre}</span>
-  return <span className="inline-block w-20 h-3 rounded bg-ink/10 align-middle" title="Sin asignar" />
+  return <span className="inline-block w-20 h-3 rounded bg-ink/10 align-middle" title={t('comun.sinAsignar')} />
 }
 
 function SeccionResumen({ icono, titulo, to, vacio, hayDatos, children }) {

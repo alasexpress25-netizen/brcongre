@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
+import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
 import { notificar } from '../lib/notificar'
 
@@ -9,34 +10,32 @@ const vacio = {
   congregacion_visitante: '', presidente_id: '', conductor_atalaya_id: '', lector_id: '', notas: '',
 }
 
-const tareasCampos = [
-  { key: 'audio_id', label: 'Audio' },
-  { key: 'video_id', label: 'Video' },
-  { key: 'microfono1_inicio_id', label: 'Micrófono 1 inicio' },
-  { key: 'microfono2_inicio_id', label: 'Micrófono 2 inicio' },
-  { key: 'microfono1_final_id', label: 'Micrófono 1 final' },
-  { key: 'microfono2_final_id', label: 'Micrófono 2 final' },
-  { key: 'plataforma_inicio_id', label: 'Plataforma inicio' },
-  { key: 'plataforma_final_id', label: 'Plataforma final' },
-  { key: 'acomodador_entrada1_id', label: 'Acomodador entrada 1' },
-  { key: 'acomodador_entrada2_id', label: 'Acomodador entrada 2' },
-  { key: 'acomodador_audio_inicio_id', label: 'Acomodador aud. inicio' },
-  { key: 'acomodador_audio_final_id', label: 'Acomodador aud. final' },
+const CLAVES_TAREAS = [
+  'audio_id', 'video_id',
+  'microfono1_inicio_id', 'microfono2_inicio_id',
+  'microfono1_final_id', 'microfono2_final_id',
+  'plataforma_inicio_id', 'plataforma_final_id',
+  'acomodador_entrada1_id', 'acomodador_entrada2_id',
+  'acomodador_audio_inicio_id', 'acomodador_audio_final_id',
 ]
 
-function formatearFecha(f) {
-  return new Date(f + 'T00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+function formatearFecha(f, locale) {
+  return new Date(f + 'T00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
 function NombreOFranja({ nombre }) {
+  const { t } = useI18n()
   if (nombre) return <span>{nombre}</span>
-  return <span className="inline-block w-24 h-3.5 rounded bg-ink/10 align-middle" title="Sin asignar" />
+  return <span className="inline-block w-24 h-3.5 rounded bg-ink/10 align-middle" title={t('comun.sinAsignar')} />
 }
 
 export default function ReunionPublica() {
   const { puedeEditar } = useAuth()
+  const { t, locale } = useI18n()
   const esEditor = puedeEditar('reunion_publica')
   const esEditorTareas = puedeEditar('vida_ministerio_tareas')
+
+  const tareasCampos = CLAVES_TAREAS.map((key) => ({ key, label: t(`misAsignaciones.tarea_${key}`) }))
 
   const [reuniones, setReuniones] = useState([])
   const [personas, setPersonas] = useState([])
@@ -104,11 +103,11 @@ export default function ReunionPublica() {
     if (editandoId) await supabase.from('reuniones_publicas').update(payload).eq('id', editandoId)
     else await supabase.from('reuniones_publicas').insert(payload)
 
-    const fechaTexto = formatearFecha(payload.fecha)
-    if (payload.orador_id) notificar([payload.orador_id], 'Te asignaron el discurso público', `Tenés el discurso "${payload.tema || ''}" del ${fechaTexto}.`)
-    if (payload.presidente_id) notificar([payload.presidente_id], 'Te asignaron presidir la Reunión Pública', `Presidís la Reunión Pública del ${fechaTexto}.`)
-    if (payload.conductor_atalaya_id) notificar([payload.conductor_atalaya_id], 'Te asignaron conducir La Atalaya', `Conducís La Atalaya del ${fechaTexto}.`)
-    if (payload.lector_id) notificar([payload.lector_id], 'Te asignaron la lectura de La Atalaya', `Tenés la lectura de La Atalaya del ${fechaTexto}.`)
+    const fechaTexto = formatearFecha(payload.fecha, locale())
+    if (payload.orador_id) notificar([payload.orador_id], t('reunionPublica.notifDiscursoTitulo'), t('reunionPublica.notifDiscursoCuerpo', { tema: payload.tema || '', fecha: fechaTexto }))
+    if (payload.presidente_id) notificar([payload.presidente_id], t('reunionPublica.notifPresidenteTitulo'), t('reunionPublica.notifPresidenteCuerpo', { fecha: fechaTexto }))
+    if (payload.conductor_atalaya_id) notificar([payload.conductor_atalaya_id], t('reunionPublica.notifConductorTitulo'), t('reunionPublica.notifConductorCuerpo', { fecha: fechaTexto }))
+    if (payload.lector_id) notificar([payload.lector_id], t('reunionPublica.notifLectorTitulo'), t('reunionPublica.notifLectorCuerpo', { fecha: fechaTexto }))
 
     setMostrarForm(false)
     setForm(vacio)
@@ -117,7 +116,7 @@ export default function ReunionPublica() {
   }
 
   async function eliminar(id) {
-    if (!confirm('¿Eliminar esta reunión?')) return
+    if (!confirm(t('reunionPublica.confirmarEliminar'))) return
     await supabase.from('reuniones_publicas').delete().eq('id', id)
     cargar()
   }
@@ -137,9 +136,9 @@ export default function ReunionPublica() {
     tareasCampos.forEach((c) => { payload[c.key] = formTareas[c.key] || null })
     await supabase.from('tareas_mecanicas_reunion_publica').upsert(payload)
 
-    const fechaTexto = formatearFecha(reunion.fecha)
+    const fechaTexto = formatearFecha(reunion.fecha, locale())
     tareasCampos.forEach((c) => {
-      if (payload[c.key]) notificar([payload[c.key]], `Tarea asignada: ${c.label}`, `Tenés la tarea "${c.label}" el ${fechaTexto} en la Reunión Pública.`)
+      if (payload[c.key]) notificar([payload[c.key]], t('reunionPublica.notifTareaTitulo', { tarea: c.label }), t('reunionPublica.notifTareaCuerpo', { tarea: c.label, fecha: fechaTexto }))
     })
 
     setReunionTareasActivaId(null)
@@ -158,10 +157,10 @@ export default function ReunionPublica() {
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl font-semibold">Reunión Pública</h1>
+        <h1 className="font-display text-2xl font-semibold">{t('reunionPublica.titulo')}</h1>
         {esEditor && (
           <button onClick={nueva} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
-            + nueva
+            {t('reunionPublica.nueva')}
           </button>
         )}
       </div>
@@ -171,10 +170,10 @@ export default function ReunionPublica() {
           <div className="flex gap-3">
             <input required type="date" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })}
               className="flex-1 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
-            <input placeholder="N° discurso (ej: 25)" value={form.numero_discurso} onChange={(e) => setForm({ ...form, numero_discurso: e.target.value })}
+            <input placeholder={t('reunionPublica.numeroDiscurso')} value={form.numero_discurso} onChange={(e) => setForm({ ...form, numero_discurso: e.target.value })}
               className="w-40 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
           </div>
-          <input placeholder="Tema del discurso" value={form.tema} onChange={(e) => setForm({ ...form, tema: e.target.value })}
+          <input placeholder={t('reunionPublica.temaDiscurso')} value={form.tema} onChange={(e) => setForm({ ...form, tema: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
           <div className="flex flex-col gap-2">
             <label className="flex items-center gap-2 text-sm text-ink-soft">
@@ -183,35 +182,35 @@ export default function ReunionPublica() {
                 checked={form.oradorEsPropio}
                 onChange={(e) => setForm({ ...form, oradorEsPropio: e.target.checked })}
               />
-              El orador es de esta congregación
+              {t('reunionPublica.oradorPropio')}
             </label>
             <div className="flex gap-3">
               {form.oradorEsPropio ? (
-                selectorPersona('Orador', form.orador_id, (e) => setForm({ ...form, orador_id: e.target.value }))
+                selectorPersona(t('reunionPublica.orador'), form.orador_id, (e) => setForm({ ...form, orador_id: e.target.value }))
               ) : (
-                <input placeholder="Orador (nombre)" value={form.orador_nombre} onChange={(e) => setForm({ ...form, orador_nombre: e.target.value })}
+                <input placeholder={t('reunionPublica.oradorNombre')} value={form.orador_nombre} onChange={(e) => setForm({ ...form, orador_nombre: e.target.value })}
                   className="flex-1 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
               )}
             </div>
           </div>
-          <input placeholder="Congregación visitante (si aplica)" value={form.congregacion_visitante} onChange={(e) => setForm({ ...form, congregacion_visitante: e.target.value })}
+          <input placeholder={t('reunionPublica.congregacionVisitante')} value={form.congregacion_visitante} onChange={(e) => setForm({ ...form, congregacion_visitante: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
           <div className="flex gap-3">
-            {selectorPersona('Presidente', form.presidente_id, (e) => setForm({ ...form, presidente_id: e.target.value }))}
-            {selectorPersona('Conductor de La Atalaya', form.conductor_atalaya_id, (e) => setForm({ ...form, conductor_atalaya_id: e.target.value }))}
-            {selectorPersona('Lector', form.lector_id, (e) => setForm({ ...form, lector_id: e.target.value }))}
+            {selectorPersona(t('reunionPublica.presidente'), form.presidente_id, (e) => setForm({ ...form, presidente_id: e.target.value }))}
+            {selectorPersona(t('reunionPublica.conductorAtalaya'), form.conductor_atalaya_id, (e) => setForm({ ...form, conductor_atalaya_id: e.target.value }))}
+            {selectorPersona(t('reunionPublica.lector'), form.lector_id, (e) => setForm({ ...form, lector_id: e.target.value }))}
           </div>
-          <textarea placeholder="Notas" value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })}
+          <textarea placeholder={t('reunionPublica.notas')} value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" rows={2} />
           <div className="flex gap-2">
-            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">Guardar</button>
-            <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">Cancelar</button>
+            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">{t('comun.guardar')}</button>
+            <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">{t('comun.cancelar')}</button>
           </div>
         </form>
       )}
 
-      {cargando && <p className="text-ink-soft text-sm">Cargando…</p>}
-      {!cargando && reuniones.length === 0 && <p className="text-ink-soft text-sm">No hay reuniones públicas cargadas.</p>}
+      {cargando && <p className="text-ink-soft text-sm">{t('comun.cargando')}</p>}
+      {!cargando && reuniones.length === 0 && <p className="text-ink-soft text-sm">{t('reunionPublica.sinReuniones')}</p>}
 
       <div className="flex flex-col gap-4">
         {reuniones.map((r) => (
@@ -219,33 +218,33 @@ export default function ReunionPublica() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-display text-lg font-semibold">
-                  {r.tema || 'Tema a confirmar'} {r.numero_discurso && <span className="font-mono text-xs text-ink-soft">[{r.numero_discurso}]</span>}
+                  {r.tema || t('reunionPublica.temaAConfirmar')} {r.numero_discurso && <span className="font-mono text-xs text-ink-soft">[{r.numero_discurso}]</span>}
                 </h3>
-                <p className="font-mono text-xs text-gold mt-0.5">{formatearFecha(r.fecha)}</p>
+                <p className="font-mono text-xs text-gold mt-0.5">{formatearFecha(r.fecha, locale())}</p>
               </div>
               {esEditor && (
                 <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0">
-                  <button onClick={() => editar(r)} className="hover:text-petrol">editar</button>
-                  <button onClick={() => eliminar(r.id)} className="hover:text-clay">borrar</button>
+                  <button onClick={() => editar(r)} className="hover:text-petrol">{t('comun.editar')}</button>
+                  <button onClick={() => eliminar(r.id)} className="hover:text-clay">{t('comun.borrar')}</button>
                 </div>
               )}
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3 font-mono text-xs">
-              <div><p className="text-ink-soft">Orador</p><p className="text-ink text-sm">{r.orador?.nombre || r.orador_nombre || '—'}{r.congregacion_visitante && ` (${r.congregacion_visitante})`}</p></div>
-              <div><p className="text-ink-soft">Presidente</p><p className="text-sm"><NombreOFranja nombre={r.presidente?.nombre} /></p></div>
-              <div><p className="text-ink-soft">Conductor Atalaya</p><p className="text-sm"><NombreOFranja nombre={r.conductor_atalaya?.nombre} /></p></div>
-              <div><p className="text-ink-soft">Lector</p><p className="text-sm"><NombreOFranja nombre={r.lector?.nombre} /></p></div>
+              <div><p className="text-ink-soft">{t('reunionPublica.orador')}</p><p className="text-ink text-sm">{r.orador?.nombre || r.orador_nombre || '—'}{r.congregacion_visitante && ` (${r.congregacion_visitante})`}</p></div>
+              <div><p className="text-ink-soft">{t('reunionPublica.presidente')}</p><p className="text-sm"><NombreOFranja nombre={r.presidente?.nombre} /></p></div>
+              <div><p className="text-ink-soft">{t('reunionPublica.conductorAtalaya')}</p><p className="text-sm"><NombreOFranja nombre={r.conductor_atalaya?.nombre} /></p></div>
+              <div><p className="text-ink-soft">{t('reunionPublica.lector')}</p><p className="text-sm"><NombreOFranja nombre={r.lector?.nombre} /></p></div>
             </div>
 
             {r.notas && <p className="text-sm text-ink-soft mt-2">{r.notas}</p>}
 
             <div className="border-t border-ink/10 mt-4 pt-3">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-mono text-xs uppercase tracking-wider text-petrol">Tareas mecánicas</h4>
+                <h4 className="font-mono text-xs uppercase tracking-wider text-petrol">{t('reunionPublica.tareasMecanicas')}</h4>
                 {esEditorTareas && (
                   <button onClick={() => abrirTareas(r)} className="font-mono text-xs text-ink-soft hover:text-petrol">
-                    {r.tareas_mecanicas_reunion_publica ? 'editar' : '+ cargar'}
+                    {r.tareas_mecanicas_reunion_publica ? t('comun.editar') : t('reunionPublica.cargarTareas')}
                   </button>
                 )}
               </div>
@@ -263,8 +262,8 @@ export default function ReunionPublica() {
                     </div>
                   ))}
                   <div className="col-span-2 sm:col-span-3 flex gap-2 mt-2">
-                    <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">Guardar</button>
-                    <button type="button" onClick={() => setReunionTareasActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">Cancelar</button>
+                    <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
+                    <button type="button" onClick={() => setReunionTareasActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">{t('comun.cancelar')}</button>
                   </div>
                 </form>
               ) : r.tareas_mecanicas_reunion_publica ? (
@@ -277,7 +276,7 @@ export default function ReunionPublica() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-ink-soft/70">Sin tareas cargadas.</p>
+                <p className="text-sm text-ink-soft/70">{t('reunionPublica.sinTareas')}</p>
               )}
             </div>
           </div>

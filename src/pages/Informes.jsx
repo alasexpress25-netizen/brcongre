@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
+import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
 
-function mesesDisponibles() {
+function mesesDisponibles(locale) {
   const opciones = []
   const hoy = new Date()
   // últimos 12 meses, el más reciente primero
@@ -12,7 +13,7 @@ function mesesDisponibles() {
     opciones.push({
       mes: d.getMonth() + 1,
       anio: d.getFullYear(),
-      label: d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' }),
+      label: d.toLocaleDateString(locale, { month: 'long', year: 'numeric' }),
     })
   }
   return opciones
@@ -20,8 +21,9 @@ function mesesDisponibles() {
 
 export default function Informes() {
   const { puedeEditar } = useAuth()
+  const { t, locale } = useI18n()
   const esEditor = puedeEditar('secretario')
-  const meses = mesesDisponibles()
+  const meses = mesesDisponibles(locale())
 
   const [mesAnio, setMesAnio] = useState(`${meses[0].mes}-${meses[0].anio}`)
   const [filas, setFilas] = useState([])
@@ -41,7 +43,7 @@ export default function Informes() {
     const { data, error: err } = await supabase.rpc('informes_estado', { p_mes: mes, p_anio: anio })
     if (err) {
       console.error('Error al cargar informes_estado:', err)
-      setError('No se pudo cargar el estado de los informes. ' + (err.message || ''))
+      setError(t('informes.errorCargarEstado') + ' ' + (err.message || ''))
       setFilas([])
     } else {
       setFilas(data || [])
@@ -71,7 +73,7 @@ export default function Informes() {
     const porGrupo = new Map()
     filtradas.forEach((f) => {
       const key = f.grupo_id || 'sin_grupo'
-      const nombreGrupo = f.grupo_nombre || 'Sin grupo'
+      const nombreGrupo = f.grupo_nombre || t('publicadores.sinGrupo')
       if (!porGrupo.has(key)) porGrupo.set(key, { id: key, nombre: nombreGrupo, items: [] })
       porGrupo.get(key).items.push(f)
     })
@@ -83,7 +85,7 @@ export default function Informes() {
     })
     grupos.forEach((g) => g.items.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')))
     return grupos
-  }, [filtradas])
+  }, [filtradas, t])
 
   function imprimir() {
     window.print()
@@ -91,9 +93,7 @@ export default function Informes() {
 
   async function enviarRecordatorios() {
     if (pendientesConEmail === 0) return
-    const confirmacion = confirm(
-      `¿Enviar un recordatorio por correo a los ${pendientesConEmail} publicador(es) que todavía no informaron ${meses.find((m) => m.mes === mes && m.anio === anio)?.label}?`
-    )
+    const confirmacion = confirm(t('informes.confirmarEnvio', { cantidad: pendientesConEmail, mes: labelMes }))
     if (!confirmacion) return
 
     setEnviando(true)
@@ -103,7 +103,7 @@ export default function Informes() {
     setEnviando(false)
     if (err) {
       console.error('Error al enviar recordatorios:', err)
-      setError('No se pudieron enviar los recordatorios. ' + (err.message || ''))
+      setError(t('informes.errorEnviarRecordatorios') + ' ' + (err.message || ''))
       return
     }
     setResultadoEnvio(data)
@@ -112,7 +112,7 @@ export default function Informes() {
   if (!esEditor) {
     return (
       <Layout>
-        <p className="text-ink-soft text-sm">Esta sección es solo para quienes gestionan los datos de la congregación (secretario).</p>
+        <p className="text-ink-soft text-sm">{t('informes.soloSecretario')}</p>
       </Layout>
     )
   }
@@ -120,17 +120,17 @@ export default function Informes() {
   return (
     <Layout>
       <div className="flex items-center justify-between mb-1 no-print">
-        <h1 className="font-display text-2xl font-semibold">Informes de Predicación</h1>
+        <h1 className="font-display text-2xl font-semibold">{t('informes.titulo')}</h1>
         <button onClick={imprimir} className="font-mono text-xs border border-petrol/30 text-petrol px-3 py-1.5 rounded-md hover:bg-petrol/10 transition-colors">
-          imprimir
+          {t('informes.imprimir')}
         </button>
       </div>
-      <p className="text-sm text-ink-soft mb-6 no-print">Estado de los informes mensuales por publicador.</p>
+      <p className="text-sm text-ink-soft mb-6 no-print">{t('informes.subtitulo')}</p>
 
       <div className="print-only mb-6">
-        <h1 className="font-display text-2xl font-semibold capitalize">Informes de Predicación — {labelMes}</h1>
+        <h1 className="font-display text-2xl font-semibold capitalize">{t('informes.titulo')} — {labelMes}</h1>
         <p className="text-sm text-ink-soft">
-          {filtradas.length} publicador(es) · agrupados por grupo, orden alfabético · {new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
+          {filtradas.length} {t('informes.publicadoresLabel')} · {t('informes.agrupadosPor')} · {new Date().toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       </div>
 
@@ -149,9 +149,9 @@ export default function Informes() {
 
         <div className="flex gap-1 font-mono text-xs">
           {[
-            { key: 'todos', label: `todos (${filas.length})` },
-            { key: 'informaron', label: `informaron (${totalInformaron})` },
-            { key: 'pendientes', label: `pendientes (${totalPendientes})` },
+            { key: 'todos', label: `${t('informes.todos')} (${filas.length})` },
+            { key: 'informaron', label: `${t('informes.informaron')} (${totalInformaron})` },
+            { key: 'pendientes', label: `${t('informes.pendientes')} (${totalPendientes})` },
           ].map((f) => (
             <button
               key={f.key}
@@ -169,28 +169,28 @@ export default function Informes() {
       {totalPendientes > 0 && (
         <div className="border border-gold/30 bg-gold/5 rounded-lg p-4 mb-6 flex flex-wrap items-center justify-between gap-3 no-print">
           <p className="text-sm text-ink-soft">
-            {totalPendientes} publicador(es) sin informe este mes
-            {pendientesSinEmail > 0 && ` · ${pendientesSinEmail} sin email cargado (no se les puede avisar por correo)`}
+            {totalPendientes} {t('informes.sinInformeEsteMes')}
+            {pendientesSinEmail > 0 && ` · ${pendientesSinEmail} ${t('informes.sinEmailCargado')}`}
           </p>
           <button
             onClick={enviarRecordatorios}
             disabled={enviando || pendientesConEmail === 0}
             className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark disabled:opacity-50 shrink-0"
           >
-            {enviando ? 'enviando…' : `enviar recordatorio por email (${pendientesConEmail})`}
+            {enviando ? t('informes.enviando') : `${t('informes.enviarRecordatorio')} (${pendientesConEmail})`}
           </button>
         </div>
       )}
 
       {resultadoEnvio && (
         <p className="text-sm text-petrol mb-4 no-print">
-          ✅ Recordatorio enviado a {resultadoEnvio.destinatarios ?? 0} publicador(es).
+          {t('informes.recordatorioEnviado', { cantidad: resultadoEnvio.destinatarios ?? 0 })}
         </p>
       )}
       {error && <p className="text-sm text-clay mb-4 no-print">{error}</p>}
 
-      {cargando && <p className="text-ink-soft text-sm no-print">Cargando…</p>}
-      {!cargando && gruposConFilas.length === 0 && <p className="text-ink-soft text-sm">No hay publicadores para mostrar.</p>}
+      {cargando && <p className="text-ink-soft text-sm no-print">{t('comun.cargando')}</p>}
+      {!cargando && gruposConFilas.length === 0 && <p className="text-ink-soft text-sm">{t('informes.sinPublicadores')}</p>}
 
       <div className="flex flex-col gap-6">
         {gruposConFilas.map((g) => (
@@ -209,12 +209,12 @@ export default function Informes() {
                   <div>
                     <p className="font-display font-medium">{f.nombre}</p>
                     <p className="text-xs text-ink-soft mt-0.5">
-                      {f.email || <span className="text-clay">sin email</span>}
+                      {f.email || <span className="text-clay">{t('informes.sinEmail')}</span>}
                       {f.informado && (
                         <>
-                          {f.precursor_auxiliar && ' · precursor auxiliar'}
-                          {typeof f.horas === 'number' && ` · ${f.horas} hs`}
-                          {typeof f.cursos_biblicos === 'number' && f.cursos_biblicos > 0 && ` · ${f.cursos_biblicos} curso(s) bíblico(s)`}
+                          {f.precursor_auxiliar && ` · ${t('informes.precursorAuxiliar')}`}
+                          {typeof f.horas === 'number' && ` · ${f.horas} ${t('informes.horasAbrev')}`}
+                          {typeof f.cursos_biblicos === 'number' && f.cursos_biblicos > 0 && ` · ${f.cursos_biblicos} ${t('informes.cursosBiblicos')}`}
                         </>
                       )}
                     </p>
@@ -224,7 +224,7 @@ export default function Informes() {
                       f.informado ? 'bg-petrol/10 text-petrol' : 'bg-gold/15 text-gold'
                     }`}
                   >
-                    {f.informado ? 'informó' : 'pendiente'}
+                    {f.informado ? t('informes.informo') : t('informes.pendiente')}
                   </span>
                 </div>
               ))}

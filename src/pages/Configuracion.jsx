@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
+import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
 
 const vacio = {
@@ -15,6 +16,7 @@ const vacio = {
 
 export default function Configuracion() {
   const { esAdmin } = useAuth()
+  const { t } = useI18n()
   const [form, setForm] = useState(vacio)
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
@@ -57,33 +59,31 @@ export default function Configuracion() {
   if (!esAdmin) {
     return (
       <Layout>
-        <p className="text-ink-soft text-sm">Esta sección es solo para administradores.</p>
+        <p className="text-ink-soft text-sm">{t('configuracion.soloAdmin')}</p>
       </Layout>
     )
   }
 
   return (
     <Layout>
-      <h1 className="font-display text-2xl font-semibold mb-1">Datos de la congregación</h1>
-      <p className="text-sm text-ink-soft mb-6">
-        Esta información aparece en el encabezado y el pie de página de toda la app.
-      </p>
+      <h1 className="font-display text-2xl font-semibold mb-1">{t('configuracion.titulo')}</h1>
+      <p className="text-sm text-ink-soft mb-6">{t('configuracion.subtitulo')}</p>
 
-      {cargando && <p className="text-ink-soft text-sm">Cargando…</p>}
+      {cargando && <p className="text-ink-soft text-sm">{t('comun.cargando')}</p>}
 
       {!cargando && (
         <form onSubmit={guardar} className="border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
           <div>
-            <label className="text-xs text-ink-soft font-mono block mb-1">Nombre de la congregación</label>
+            <label className="text-xs text-ink-soft font-mono block mb-1">{t('configuracion.nombreCongregacion')}</label>
             <input
-              placeholder="Ej: Congregación Norte Lomas de Zamora"
+              placeholder={t('configuracion.nombreEjemplo')}
               value={form.nombre}
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
               className="w-full border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
             />
           </div>
           <div>
-            <label className="text-xs text-ink-soft font-mono block mb-1">Dirección del Salón</label>
+            <label className="text-xs text-ink-soft font-mono block mb-1">{t('configuracion.direccionSalon')}</label>
             <input
               value={form.direccion}
               onChange={(e) => setForm({ ...form, direccion: e.target.value })}
@@ -91,7 +91,7 @@ export default function Configuracion() {
             />
           </div>
           <div>
-            <label className="text-xs text-ink-soft font-mono block mb-1">Teléfono de contacto</label>
+            <label className="text-xs text-ink-soft font-mono block mb-1">{t('configuracion.telefonoContacto')}</label>
             <input
               value={form.telefono_contacto}
               onChange={(e) => setForm({ ...form, telefono_contacto: e.target.value })}
@@ -100,18 +100,18 @@ export default function Configuracion() {
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="text-xs text-ink-soft font-mono block mb-1">Día Reunión Pública</label>
+              <label className="text-xs text-ink-soft font-mono block mb-1">{t('configuracion.diaReunionPublica')}</label>
               <input
-                placeholder="Ej: Domingo"
+                placeholder={t('configuracion.diaEjemplo')}
                 value={form.dia_reunion_publica}
                 onChange={(e) => setForm({ ...form, dia_reunion_publica: e.target.value })}
                 className="w-full border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
               />
             </div>
             <div className="flex-1">
-              <label className="text-xs text-ink-soft font-mono block mb-1">Hora Reunión Pública</label>
+              <label className="text-xs text-ink-soft font-mono block mb-1">{t('configuracion.horaReunionPublica')}</label>
               <input
-                placeholder="Ej: 10:00"
+                placeholder={t('configuracion.horaEjemplo')}
                 value={form.hora_reunion_publica}
                 onChange={(e) => setForm({ ...form, hora_reunion_publica: e.target.value })}
                 className="w-full border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
@@ -120,18 +120,18 @@ export default function Configuracion() {
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="text-xs text-ink-soft font-mono block mb-1">Día Vida y Ministerio</label>
+              <label className="text-xs text-ink-soft font-mono block mb-1">{t('configuracion.diaVidaMinisterio')}</label>
               <input
-                placeholder="Ej: Martes"
+                placeholder={t('configuracion.diaVMEjemplo')}
                 value={form.dia_vida_ministerio}
                 onChange={(e) => setForm({ ...form, dia_vida_ministerio: e.target.value })}
                 className="w-full border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
               />
             </div>
             <div className="flex-1">
-              <label className="text-xs text-ink-soft font-mono block mb-1">Hora Vida y Ministerio</label>
+              <label className="text-xs text-ink-soft font-mono block mb-1">{t('configuracion.horaVidaMinisterio')}</label>
               <input
-                placeholder="Ej: 19:00"
+                placeholder={t('configuracion.horaVMEjemplo')}
                 value={form.hora_vida_ministerio}
                 onChange={(e) => setForm({ ...form, hora_vida_ministerio: e.target.value })}
                 className="w-full border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
@@ -143,9 +143,9 @@ export default function Configuracion() {
               disabled={guardando}
               className="font-mono text-xs bg-petrol text-paper px-4 py-2 rounded-md hover:bg-petrol-dark disabled:opacity-50 self-start"
             >
-              {guardando ? 'guardando…' : 'Guardar'}
+              {guardando ? t('configuracion.guardando') : t('comun.guardar')}
             </button>
-            {guardado && <span className="text-xs text-petrol">✓ guardado — recargá la página para verlo en el encabezado</span>}
+            {guardado && <span className="text-xs text-petrol">{t('configuracion.guardadoOk')}</span>}
           </div>
         </form>
       )}

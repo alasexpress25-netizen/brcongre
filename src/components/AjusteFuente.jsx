@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '../lib/i18n/I18nContext'
 
 const PASOS = [87.5, 100, 112.5, 125, 137.5]
 const CLAVE_STORAGE = 'brcongre_tamano_fuente'
@@ -11,6 +12,7 @@ function indiceGuardado() {
 }
 
 export default function AjusteFuente() {
+  const { t } = useI18n()
   const [abierto, setAbierto] = useState(false)
   const [indice, setIndice] = useState(indiceGuardado)
 
@@ -31,7 +33,7 @@ export default function AjusteFuente() {
             step={1}
             value={indice}
             onChange={(e) => setIndice(Number(e.target.value))}
-            aria-label="Tamaño de letra"
+            aria-label={t('ajusteFuente.tamanoLetra')}
             className="w-28 accent-petrol"
           />
           <span className="text-lg font-semibold text-ink-soft">A</span>
@@ -39,7 +41,7 @@ export default function AjusteFuente() {
       )}
       <button
         onClick={() => setAbierto((v) => !v)}
-        aria-label="Ajustar tamaño de letra"
+        aria-label={t('ajusteFuente.ajustarTamanoLetra')}
         className="w-11 h-11 rounded-full bg-petrol text-paper shadow-lg flex items-center justify-center font-display text-lg"
       >
         A

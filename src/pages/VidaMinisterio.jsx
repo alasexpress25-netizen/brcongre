@@ -1,39 +1,40 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
+import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
 import { notificar } from '../lib/notificar'
 
-const secciones = [
-  { key: 'tesoros', label: 'Tesoros de la Biblia', permiso: null, color: 'text-teal-700', icono: '💎' },
-  { key: 'ministerio', label: 'Seamos Mejores Maestros', permiso: 'vida_ministerio_escuela', color: 'text-amber-700', icono: '🛡️' },
-  { key: 'vida_cristiana', label: 'Nuestra Vida Cristiana', permiso: 'vida_ministerio_oraciones', color: 'text-red-700', icono: '🏛️' },
+const CLAVES_SECCIONES = [
+  { key: 'tesoros', permiso: null, color: 'text-teal-700', icono: '💎' },
+  { key: 'ministerio', permiso: 'vida_ministerio_escuela', color: 'text-amber-700', icono: '🛡️' },
+  { key: 'vida_cristiana', permiso: 'vida_ministerio_oraciones', color: 'text-red-700', icono: '🏛️' },
 ]
 
-const tareasCampos = [
-  { key: 'audio_id', label: 'Audio' },
-  { key: 'video_id', label: 'Video' },
-  { key: 'microfono1_inicio_id', label: 'Micrófono 1 inicio' },
-  { key: 'microfono2_inicio_id', label: 'Micrófono 2 inicio' },
-  { key: 'microfono1_final_id', label: 'Micrófono 1 final' },
-  { key: 'microfono2_final_id', label: 'Micrófono 2 final' },
-  { key: 'plataforma_inicio_id', label: 'Plataforma inicio' },
-  { key: 'plataforma_final_id', label: 'Plataforma final' },
-  { key: 'acomodador_entrada1_id', label: 'Acomodador entrada 1' },
-  { key: 'acomodador_entrada2_id', label: 'Acomodador entrada 2' },
-  { key: 'acomodador_audio_inicio_id', label: 'Acomodador aud. inicio' },
-  { key: 'acomodador_audio_final_id', label: 'Acomodador aud. final' },
+const CLAVES_TAREAS = [
+  'audio_id',
+  'video_id',
+  'microfono1_inicio_id',
+  'microfono2_inicio_id',
+  'microfono1_final_id',
+  'microfono2_final_id',
+  'plataforma_inicio_id',
+  'plataforma_final_id',
+  'acomodador_entrada1_id',
+  'acomodador_entrada2_id',
+  'acomodador_audio_inicio_id',
+  'acomodador_audio_final_id',
 ]
 
 const vacioParte = { seccion: 'tesoros', sala: '', es_lectura_biblia: false, titulo: '', duracion_min: '', asignado_id: '', ayudante_id: '', notas: '' }
 const vacioSemana = { fecha_inicio: '', lectura_biblia: '', cantico_inicial: '', oracion_inicial_id: '', cantico_final: '', oracion_final_id: '', presidente_id: '' }
 
-function formatearRango(fechaInicio) {
+function formatearRango(fechaInicio, locale) {
   const inicio = new Date(fechaInicio + 'T00:00')
   const fin = new Date(inicio)
   fin.setDate(inicio.getDate() + 6)
   const opciones = { day: 'numeric', month: 'short' }
-  return `${inicio.toLocaleDateString('es-AR', opciones)} — ${fin.toLocaleDateString('es-AR', opciones)}`
+  return `${inicio.toLocaleDateString(locale, opciones)} — ${fin.toLocaleDateString(locale, opciones)}`
 }
 
 function lunesActual() {
@@ -44,10 +45,25 @@ function lunesActual() {
   return lunes.toISOString().slice(0, 10)
 }
 
-const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
+const MESES = [
+  // Español
+  'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE',
+  // Português
+  'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO',
+]
+
+// Encabezados de sección en español y portugués (la Guía de actividades se puede
+// importar en cualquiera de los dos idiomas, según el selector de idioma de la app).
+const ENCABEZADOS_SECCION = {
+  tesoros: ['TESOROS', 'TESOUROS'],
+  ministerio: ['SEAMOS MEJORES MAESTROS', 'SEJAMOS MELHORES MESTRES', 'FAÇA SEU MELHOR NO MINISTÉRIO'],
+  vida_cristiana: ['NUESTRA VIDA CRISTIANA', 'NOSSA VIDA CRISTÃ'],
+}
+
+const FRASES_LECTURA_BIBLIA = ['lectura de la biblia', 'leitura da bíblia']
 
 function esFechaCabecera(mayus) {
-  // Detecta encabezados tipo "6-12 DE JULIO" o "29 DE JUNIO A 5 DE JULIO"
+  // Detecta encabezados tipo "6-12 DE JULIO" / "6-12 DE JULHO" o "29 DE JUNIO A 5 DE JULIO"
   // para no confundirlos con la cita de la lectura bíblica (ej: "JEREMÍAS 13-15").
   return MESES.some((m) => mayus.includes(m))
 }
@@ -60,11 +76,11 @@ function parsearPrograma(texto) {
 
   for (const linea of lineas) {
     const mayus = linea.toUpperCase()
-    if (mayus.includes('TESOROS')) { seccionActual = 'tesoros'; continue }
-    if (mayus.includes('SEAMOS MEJORES MAESTROS')) { seccionActual = 'ministerio'; continue }
-    if (mayus.includes('NUESTRA VIDA CRISTIANA')) { seccionActual = 'vida_cristiana'; continue }
+    if (ENCABEZADOS_SECCION.tesoros.some((e) => mayus.includes(e))) { seccionActual = 'tesoros'; continue }
+    if (ENCABEZADOS_SECCION.ministerio.some((e) => mayus.includes(e))) { seccionActual = 'ministerio'; continue }
+    if (ENCABEZADOS_SECCION.vida_cristiana.some((e) => mayus.includes(e))) { seccionActual = 'vida_cristiana'; continue }
     if (esFechaCabecera(mayus)) continue
-    if (/^[A-ZÁÉÍÓÚÑ0-9,\s-]+$/.test(linea) && linea.length < 40 && !/^\d+\./.test(linea)) {
+    if (/^[A-ZÁÉÍÓÚÑÃÕÇ0-9,\s-]+$/.test(linea) && linea.length < 40 && !/^\d+\./.test(linea)) {
       if (!lecturaBiblia) lecturaBiblia = linea
       continue
     }
@@ -74,7 +90,7 @@ function parsearPrograma(texto) {
       const titulo = match[1].trim()
       const duracion = Number(match[2])
       const resto = match[3].trim()
-      const esLectura = /lectura de la biblia/i.test(titulo)
+      const esLectura = FRASES_LECTURA_BIBLIA.some((f) => titulo.toLowerCase().includes(f))
       partes.push({
         seccion: esLectura ? 'tesoros' : seccionActual,
         es_lectura_biblia: esLectura,
@@ -89,11 +105,15 @@ function parsearPrograma(texto) {
 }
 
 export default function VidaMinisterio() {
+  const { t, locale, idioma } = useI18n()
   const { puedeEditar } = useAuth()
   const esEditorEscuela = puedeEditar('vida_ministerio_escuela')
   const esEditorOraciones = puedeEditar('vida_ministerio_oraciones')
   const esEditorTareas = puedeEditar('vida_ministerio_tareas')
   const esEditorAlguno = esEditorEscuela || esEditorOraciones || esEditorTareas
+
+  const secciones = CLAVES_SECCIONES.map((s) => ({ ...s, label: t(`vidaMinisterio.seccion_${s.key}`) }))
+  const tareasCampos = CLAVES_TAREAS.map((key) => ({ key, label: t(`misAsignaciones.tarea_${key}`) }))
 
   const [semanas, setSemanas] = useState([])
   const [personas, setPersonas] = useState([])
@@ -151,10 +171,10 @@ export default function VidaMinisterio() {
       await supabase.from('partes_vida_ministerio').insert(partesPayload)
     }
 
-    const fechaTexto = new Date(payload.fecha_inicio + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
-    if (payload.presidente_id) notificar([payload.presidente_id], 'Te asignaron presidir Vida y Ministerio', `Vas a presidir el programa del ${fechaTexto}.`)
-    if (payload.oracion_inicial_id) notificar([payload.oracion_inicial_id], 'Te asignaron la oración inicial', `Tenés la oración inicial del ${fechaTexto}.`)
-    if (payload.oracion_final_id) notificar([payload.oracion_final_id], 'Te asignaron la oración final', `Tenés la oración final del ${fechaTexto}.`)
+    const fechaTexto = new Date(payload.fecha_inicio + 'T00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'long' })
+    if (payload.presidente_id) notificar([payload.presidente_id], t('vidaMinisterio.notifPresidenteTitulo'), t('vidaMinisterio.notifPresidenteCuerpo', { fecha: fechaTexto }))
+    if (payload.oracion_inicial_id) notificar([payload.oracion_inicial_id], t('vidaMinisterio.notifOracionInicialTitulo'), t('vidaMinisterio.notifOracionInicialCuerpo', { fecha: fechaTexto }))
+    if (payload.oracion_final_id) notificar([payload.oracion_final_id], t('vidaMinisterio.notifOracionFinalTitulo'), t('vidaMinisterio.notifOracionFinalCuerpo', { fecha: fechaTexto }))
 
     setMostrarFormSemana(false)
     setFormSemana(vacioSemana)
@@ -164,13 +184,13 @@ export default function VidaMinisterio() {
 
   async function importarDeWol() {
     if (!formSemana.fecha_inicio) {
-      alert('Elegí primero la fecha de inicio de la semana.')
+      alert(t('vidaMinisterio.elegiFechaPrimeroAlerta'))
       return
     }
     setImportandoWol(true)
     try {
       const { data, error } = await supabase.functions.invoke('wol-importar', {
-        body: { fecha_inicio: formSemana.fecha_inicio },
+        body: { fecha_inicio: formSemana.fecha_inicio, idioma },
       })
       if (error) throw error
       if (data?.error) throw new Error(data.error)
@@ -183,7 +203,7 @@ export default function VidaMinisterio() {
       }))
       setPartesDetectadas(partes)
     } catch (err) {
-      alert('No se pudo importar de WOL: ' + (err.message || err))
+      alert(t('vidaMinisterio.errorImportarWol') + (err.message || err))
     } finally {
       setImportandoWol(false)
     }
@@ -226,9 +246,9 @@ export default function VidaMinisterio() {
     if (editandoParteId) await supabase.from('partes_vida_ministerio').update(payload).eq('id', editandoParteId)
     else await supabase.from('partes_vida_ministerio').insert(payload)
 
-    const fechaTexto = new Date(semana.fecha_inicio + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
-    if (payload.asignado_id) notificar([payload.asignado_id], `Te asignaron una parte: ${payload.titulo}`, `Tenés la parte "${payload.titulo}" del ${fechaTexto}.`)
-    if (payload.ayudante_id) notificar([payload.ayudante_id], `Sos ayudante en: ${payload.titulo}`, `Ayudás en la parte "${payload.titulo}" del ${fechaTexto}.`)
+    const fechaTexto = new Date(semana.fecha_inicio + 'T00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'long' })
+    if (payload.asignado_id) notificar([payload.asignado_id], t('vidaMinisterio.notifParteTitulo', { titulo: payload.titulo }), t('vidaMinisterio.notifParteCuerpo', { titulo: payload.titulo, fecha: fechaTexto }))
+    if (payload.ayudante_id) notificar([payload.ayudante_id], t('vidaMinisterio.notifAyudanteTitulo', { titulo: payload.titulo }), t('vidaMinisterio.notifAyudanteCuerpo', { titulo: payload.titulo, fecha: fechaTexto }))
 
     setSemanaActivaId(null)
     setEditandoParteId(null)
@@ -236,7 +256,7 @@ export default function VidaMinisterio() {
   }
 
   async function eliminarParte(id) {
-    if (!confirm('¿Eliminar esta parte?')) return
+    if (!confirm(t('vidaMinisterio.confirmarEliminarParte'))) return
     await supabase.from('partes_vida_ministerio').delete().eq('id', id)
     cargar()
   }
@@ -260,15 +280,15 @@ export default function VidaMinisterio() {
     }
     await supabase.from('semanas_vida_ministerio').update(payload).eq('id', cabeceraActivaId)
 
-    const fechaTexto = new Date(semana.fecha_inicio + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
+    const fechaTexto = new Date(semana.fecha_inicio + 'T00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'long' })
     if (payload.presidente_id && payload.presidente_id !== semana.presidente_id) {
-      notificar([payload.presidente_id], 'Te asignaron presidir Vida y Ministerio', `Vas a presidir el programa del ${fechaTexto}.`)
+      notificar([payload.presidente_id], t('vidaMinisterio.notifPresidenteTitulo'), t('vidaMinisterio.notifPresidenteCuerpo', { fecha: fechaTexto }))
     }
     if (payload.oracion_inicial_id && payload.oracion_inicial_id !== semana.oracion_inicial_id) {
-      notificar([payload.oracion_inicial_id], 'Te asignaron la oración inicial', `Tenés la oración inicial del ${fechaTexto}.`)
+      notificar([payload.oracion_inicial_id], t('vidaMinisterio.notifOracionInicialTitulo'), t('vidaMinisterio.notifOracionInicialCuerpo', { fecha: fechaTexto }))
     }
     if (payload.oracion_final_id && payload.oracion_final_id !== semana.oracion_final_id) {
-      notificar([payload.oracion_final_id], 'Te asignaron la oración final', `Tenés la oración final del ${fechaTexto}.`)
+      notificar([payload.oracion_final_id], t('vidaMinisterio.notifOracionFinalTitulo'), t('vidaMinisterio.notifOracionFinalCuerpo', { fecha: fechaTexto }))
     }
 
     setCabeceraActivaId(null)
@@ -290,10 +310,10 @@ export default function VidaMinisterio() {
     tareasCampos.forEach((c) => { payload[c.key] = formTareas[c.key] || null })
     await supabase.from('tareas_mecanicas').upsert(payload)
 
-    const fechaTexto = new Date(semana.fecha_inicio + 'T00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
+    const fechaTexto = new Date(semana.fecha_inicio + 'T00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'long' })
     tareasCampos.forEach((c) => {
       if (payload[c.key]) {
-        notificar([payload[c.key]], `Tarea asignada: ${c.label}`, `Tenés la tarea "${c.label}" el ${fechaTexto}.`)
+        notificar([payload[c.key]], t('vidaMinisterio.notifTareaTitulo', { tarea: c.label }), t('vidaMinisterio.notifTareaCuerpo', { tarea: c.label, fecha: fechaTexto }))
       }
     })
 
@@ -313,7 +333,7 @@ export default function VidaMinisterio() {
   if (cargando) {
     return (
       <Layout>
-        <p className="text-ink-soft text-sm">Cargando…</p>
+        <p className="text-ink-soft text-sm">{t('comun.cargando')}</p>
       </Layout>
     )
   }
@@ -321,10 +341,10 @@ export default function VidaMinisterio() {
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl font-semibold">Vida y Ministerio</h1>
+        <h1 className="font-display text-2xl font-semibold">{t('vidaMinisterio.titulo')}</h1>
         {(esEditorEscuela || esEditorOraciones) && (
           <button onClick={() => setMostrarFormSemana(true)} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark">
-            + crear semana
+            {t('vidaMinisterio.crearSemana')}
           </button>
         )}
       </div>
@@ -339,23 +359,23 @@ export default function VidaMinisterio() {
                 disabled={importandoWol || !formSemana.fecha_inicio}
                 className="font-mono text-xs bg-gold text-ink px-3 py-1.5 rounded-md hover:bg-gold-dark disabled:opacity-50"
               >
-                {importandoWol ? 'importando…' : '⇩ importar programa de WOL'}
+                {importandoWol ? t('vidaMinisterio.importando') : t('vidaMinisterio.importarWol')}
               </button>
             </div>
             {!formSemana.fecha_inicio && (
-              <p className="text-xs text-ink-soft mt-2">Elegí primero la fecha de inicio de la semana, abajo.</p>
+              <p className="text-xs text-ink-soft mt-2">{t('vidaMinisterio.elegiFechaPrimero')}</p>
             )}
             {formSemana.fecha_inicio && (
-              <p className="text-xs text-ink-soft mt-2">Trae la lectura bíblica, los cánticos inicial y final, y las partes detectadas. Presidente y oraciones quedan en blanco porque son asignaciones a personas.</p>
+              <p className="text-xs text-ink-soft mt-2">{t('vidaMinisterio.importarWolDescripcion')}</p>
             )}
             {partesDetectadas.length > 0 && (
               <div className="mt-3 border border-gold/40 bg-gold-soft/10 rounded-md p-3">
-                <p className="font-mono text-xs text-gold mb-2">{partesDetectadas.length} partes detectadas — revisá antes de crear la semana:</p>
+                <p className="font-mono text-xs text-gold mb-2">{t('vidaMinisterio.partesDetectadas', { n: partesDetectadas.length })}</p>
                 <ul className="text-sm flex flex-col gap-1">
                   {partesDetectadas.map((p, i) => (
                     <li key={i} className="text-ink-soft">
                       <span className="text-ink">{p.titulo}</span> ({p.duracion_min} min) — {p.seccion}
-                      {p.es_lectura_biblia && ' · lectura de la Biblia'}
+                      {p.es_lectura_biblia && ` · ${t('vidaMinisterio.lecturaBibliaSufijo')}`}
                     </li>
                   ))}
                 </ul>
@@ -374,7 +394,7 @@ export default function VidaMinisterio() {
             />
             {esEditorEscuela && (
               <input
-                placeholder="Lectura bíblica (ej: Jeremías 13-15)"
+                placeholder={t('vidaMinisterio.lecturaBiblicaPlaceholder')}
                 value={formSemana.lectura_biblia}
                 onChange={(e) => setFormSemana({ ...formSemana, lectura_biblia: e.target.value })}
                 className="border border-ink/15 rounded-md px-3 py-2 text-sm flex-1"
@@ -384,37 +404,37 @@ export default function VidaMinisterio() {
           {esEditorOraciones && (
             <>
               <div className="flex gap-3">
-                {selectorPersona('Presidente', formSemana.presidente_id, (e) => setFormSemana({ ...formSemana, presidente_id: e.target.value }))}
+                {selectorPersona(t('vidaMinisterio.presidente'), formSemana.presidente_id, (e) => setFormSemana({ ...formSemana, presidente_id: e.target.value }))}
               </div>
               <div className="flex gap-3">
                 <input
-                  placeholder="N° cántico inicial"
+                  placeholder={t('vidaMinisterio.canticoInicialPlaceholder')}
                   value={formSemana.cantico_inicial}
                   onChange={(e) => setFormSemana({ ...formSemana, cantico_inicial: e.target.value })}
                   className="border border-ink/15 rounded-md px-3 py-2 text-sm w-32"
                 />
-                {selectorPersona('Oración inicial', formSemana.oracion_inicial_id, (e) => setFormSemana({ ...formSemana, oracion_inicial_id: e.target.value }))}
+                {selectorPersona(t('vidaMinisterio.oracionInicial'), formSemana.oracion_inicial_id, (e) => setFormSemana({ ...formSemana, oracion_inicial_id: e.target.value }))}
               </div>
               <div className="flex gap-3">
                 <input
-                  placeholder="N° cántico final"
+                  placeholder={t('vidaMinisterio.canticoFinalPlaceholder')}
                   value={formSemana.cantico_final}
                   onChange={(e) => setFormSemana({ ...formSemana, cantico_final: e.target.value })}
                   className="border border-ink/15 rounded-md px-3 py-2 text-sm w-32"
                 />
-                {selectorPersona('Oración final', formSemana.oracion_final_id, (e) => setFormSemana({ ...formSemana, oracion_final_id: e.target.value }))}
+                {selectorPersona(t('vidaMinisterio.oracionFinal'), formSemana.oracion_final_id, (e) => setFormSemana({ ...formSemana, oracion_final_id: e.target.value }))}
               </div>
             </>
           )}
           <div className="flex gap-2">
-            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">Crear semana</button>
-            <button type="button" onClick={() => { setMostrarFormSemana(false); setPartesDetectadas([]) }} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">Cancelar</button>
+            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">{t('vidaMinisterio.crearSemanaBoton')}</button>
+            <button type="button" onClick={() => { setMostrarFormSemana(false); setPartesDetectadas([]) }} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">{t('comun.cancelar')}</button>
           </div>
           </form>
         </div>
       )}
 
-      {semanas.length === 0 && <p className="text-ink-soft text-sm">No hay semanas próximas cargadas.</p>}
+      {semanas.length === 0 && <p className="text-ink-soft text-sm">{t('vidaMinisterio.noHaySemanas')}</p>}
 
       <div className="flex flex-col gap-8">
         {semanas.map((semana) => (
@@ -422,27 +442,27 @@ export default function VidaMinisterio() {
             <div className="bg-paper-dim px-4 py-3 flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-3">
-                  <p className="font-display font-semibold">{formatearRango(semana.fecha_inicio)}</p>
+                  <p className="font-display font-semibold">{formatearRango(semana.fecha_inicio, locale())}</p>
                   {semana.lectura_biblia && <p className="font-mono text-xs text-ink-soft uppercase">{semana.lectura_biblia}</p>}
                 </div>
                 <div className="font-mono text-xs text-ink-soft flex flex-wrap gap-3 items-center">
-                  <span>Presidente <b className="text-ink"><NombreOFranja nombre={semana.presidente?.nombre} /></b></span>
+                  <span>{t('vidaMinisterio.presidente')} <b className="text-ink"><NombreOFranja nombre={semana.presidente?.nombre} /></b></span>
                   {semana.cantico_inicial && <span>🎵{semana.cantico_inicial}</span>}
-                  <span>Oración <b className="text-ink"><NombreOFranja nombre={semana.oracion_inicial?.nombre} /></b></span>
+                  <span>{t('vidaMinisterio.oracionInicial')} <b className="text-ink"><NombreOFranja nombre={semana.oracion_inicial?.nombre} /></b></span>
                   {esEditorOraciones && cabeceraActivaId !== semana.id && (
-                    <button onClick={() => abrirCabecera(semana)} className="hover:text-petrol">editar</button>
+                    <button onClick={() => abrirCabecera(semana)} className="hover:text-petrol">{t('comun.editar')}</button>
                   )}
                 </div>
               </div>
 
               {cabeceraActivaId === semana.id && (
                 <form onSubmit={guardarCabecera} className="border border-ink/10 rounded-lg bg-white p-3 flex flex-wrap gap-2 items-center">
-                  {selectorPersona('Presidente', formCabecera.presidente_id, (e) => setFormCabecera({ ...formCabecera, presidente_id: e.target.value }))}
-                  {selectorPersona('Oración inicial', formCabecera.oracion_inicial_id, (e) => setFormCabecera({ ...formCabecera, oracion_inicial_id: e.target.value }))}
-                  {selectorPersona('Oración final', formCabecera.oracion_final_id, (e) => setFormCabecera({ ...formCabecera, oracion_final_id: e.target.value }))}
+                  {selectorPersona(t('vidaMinisterio.presidente'), formCabecera.presidente_id, (e) => setFormCabecera({ ...formCabecera, presidente_id: e.target.value }))}
+                  {selectorPersona(t('vidaMinisterio.oracionInicial'), formCabecera.oracion_inicial_id, (e) => setFormCabecera({ ...formCabecera, oracion_inicial_id: e.target.value }))}
+                  {selectorPersona(t('vidaMinisterio.oracionFinal'), formCabecera.oracion_final_id, (e) => setFormCabecera({ ...formCabecera, oracion_final_id: e.target.value }))}
                   <div className="flex gap-2">
-                    <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">Guardar</button>
-                    <button type="button" onClick={() => setCabeceraActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">Cancelar</button>
+                    <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
+                    <button type="button" onClick={() => setCabeceraActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">{t('comun.cancelar')}</button>
                   </div>
                 </form>
               )}
@@ -463,7 +483,7 @@ export default function VidaMinisterio() {
                       <h2 className={`font-mono text-xs uppercase tracking-wider ${s.color}`}>{s.icono} {s.label}</h2>
                       {!esTesoros && puedeEditarSeccion && (
                         <button onClick={() => nuevaParte(semana.id, s.key)} className="font-mono text-xs text-ink-soft hover:text-petrol">
-                          + parte
+                          {t('vidaMinisterio.crearParte')}
                         </button>
                       )}
                     </div>
@@ -472,12 +492,12 @@ export default function VidaMinisterio() {
                       <form onSubmit={guardarParte} className="mb-3 border border-ink/10 rounded-lg bg-paper p-3 flex flex-col gap-2">
                         {esTesoros && (
                           <p className="font-mono text-[10px] uppercase text-gold">
-                            {formParte.es_lectura_biblia ? 'Lectura de la Biblia' : 'Discurso de Tesoros'}
+                            {formParte.es_lectura_biblia ? t('vidaMinisterio.lecturaDeLaBiblia') : t('vidaMinisterio.discursoDeTesoros')}
                           </p>
                         )}
                         <input
                           required
-                          placeholder="Título de la parte"
+                          placeholder={t('vidaMinisterio.tituloPartePlaceholder')}
                           value={formParte.titulo}
                           onChange={(e) => setFormParte({ ...formParte, titulo: e.target.value })}
                           className="border border-ink/15 rounded-md px-2 py-1.5 text-sm"
@@ -485,7 +505,7 @@ export default function VidaMinisterio() {
                         <div className="flex gap-2">
                           <input
                             type="number"
-                            placeholder="Min"
+                            placeholder={t('vidaMinisterio.minPlaceholder')}
                             value={formParte.duracion_min}
                             onChange={(e) => setFormParte({ ...formParte, duracion_min: e.target.value })}
                             className="w-20 border border-ink/15 rounded-md px-2 py-1.5 text-sm"
@@ -496,31 +516,31 @@ export default function VidaMinisterio() {
                               onChange={(e) => setFormParte({ ...formParte, sala: e.target.value })}
                               className="border border-ink/15 rounded-md px-2 py-1.5 text-sm"
                             >
-                              <option value="">Sin sala</option>
-                              <option value="A">Sala A</option>
-                              <option value="B">Sala B</option>
+                              <option value="">{t('vidaMinisterio.sinSala')}</option>
+                              <option value="A">{t('vidaMinisterio.salaA')}</option>
+                              <option value="B">{t('vidaMinisterio.salaB')}</option>
                             </select>
                           )}
-                          {selectorPersona('Asignado a…', formParte.asignado_id, (e) => setFormParte({ ...formParte, asignado_id: e.target.value }))}
-                          {selectorPersona('Ayudante', formParte.ayudante_id, (e) => setFormParte({ ...formParte, ayudante_id: e.target.value }))}
+                          {selectorPersona(t('vidaMinisterio.asignadoA'), formParte.asignado_id, (e) => setFormParte({ ...formParte, asignado_id: e.target.value }))}
+                          {selectorPersona(t('vidaMinisterio.ayudante'), formParte.ayudante_id, (e) => setFormParte({ ...formParte, ayudante_id: e.target.value }))}
                         </div>
                         <div className="flex gap-2">
-                          <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">Guardar</button>
-                          <button type="button" onClick={() => setSemanaActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">Cancelar</button>
+                          <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
+                          <button type="button" onClick={() => setSemanaActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">{t('comun.cancelar')}</button>
                         </div>
                       </form>
                     )}
 
                     {partesSeccion.length === 0 ? (
-                      <p className="text-sm text-ink-soft/70">Sin partes cargadas.</p>
+                      <p className="text-sm text-ink-soft/70">{t('vidaMinisterio.sinPartesCargadas')}</p>
                     ) : s.key === 'ministerio' && (salaA.length > 0 || salaB.length > 0) ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <p className="font-mono text-xs text-gold mb-1">Sala A</p>
+                          <p className="font-mono text-xs text-gold mb-1">{t('vidaMinisterio.salaA')}</p>
                           <PartesLista partes={salaA} esEditor={puedeEditarSeccion} onEditar={(p) => editarParte(semana.id, p)} onEliminar={eliminarParte} />
                         </div>
                         <div>
-                          <p className="font-mono text-xs text-gold mb-1">Sala B</p>
+                          <p className="font-mono text-xs text-gold mb-1">{t('vidaMinisterio.salaB')}</p>
                           <PartesLista partes={salaB} esEditor={puedeEditarSeccion} onEditar={(p) => editarParte(semana.id, p)} onEliminar={eliminarParte} />
                         </div>
                         {sinSala.length > 0 && (
@@ -547,16 +567,16 @@ export default function VidaMinisterio() {
               {(semana.cantico_final || semana.oracion_final !== undefined) && (
                 <div className="font-mono text-xs text-ink-soft flex gap-3 border-t border-ink/10 pt-3">
                   {semana.cantico_final && <span>🎵{semana.cantico_final}</span>}
-                  <span>Oración final <b className="text-ink"><NombreOFranja nombre={semana.oracion_final?.nombre} /></b></span>
+                  <span>{t('vidaMinisterio.oracionFinal')} <b className="text-ink"><NombreOFranja nombre={semana.oracion_final?.nombre} /></b></span>
                 </div>
               )}
 
               <div className="border-t border-ink/10 pt-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="font-mono text-xs uppercase tracking-wider text-petrol">Tareas mecánicas</h2>
+                  <h2 className="font-mono text-xs uppercase tracking-wider text-petrol">{t('vidaMinisterio.tareasMecanicas')}</h2>
                   {esEditorTareas && (
                     <button onClick={() => abrirTareas(semana)} className="font-mono text-xs text-ink-soft hover:text-petrol">
-                      {semana.tareas_mecanicas ? 'editar' : '+ cargar'}
+                      {semana.tareas_mecanicas ? t('comun.editar') : t('vidaMinisterio.cargarTareas')}
                     </button>
                   )}
                 </div>
@@ -579,8 +599,8 @@ export default function VidaMinisterio() {
                       </div>
                     ))}
                     <div className="col-span-2 sm:col-span-3 flex gap-2 mt-2">
-                      <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">Guardar</button>
-                      <button type="button" onClick={() => setSemanaTareasActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">Cancelar</button>
+                      <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
+                      <button type="button" onClick={() => setSemanaTareasActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">{t('comun.cancelar')}</button>
                     </div>
                   </form>
                 ) : semana.tareas_mecanicas ? (
@@ -593,7 +613,7 @@ export default function VidaMinisterio() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-ink-soft/70">Sin tareas cargadas.</p>
+                  <p className="text-sm text-ink-soft/70">{t('vidaMinisterio.sinTareasCargadas')}</p>
                 )}
               </div>
             </div>
@@ -605,11 +625,13 @@ export default function VidaMinisterio() {
 }
 
 function NombreOFranja({ nombre }) {
+  const { t } = useI18n()
   if (nombre) return <span>{nombre}</span>
-  return <span className="inline-block w-24 h-3.5 rounded bg-ink/10 align-middle" title="Sin asignar" />
+  return <span className="inline-block w-24 h-3.5 rounded bg-ink/10 align-middle" title={t('comun.sinAsignar')} />
 }
 
 function PartesLista({ partes, esEditor, puedeEditarParte, onEditar, onEliminar }) {
+  const { t } = useI18n()
   return (
     <div className="flex flex-col gap-2">
       {partes.map((p) => {
@@ -633,8 +655,8 @@ function PartesLista({ partes, esEditor, puedeEditarParte, onEditar, onEliminar 
             </div>
             {mostrarBotones && (
               <div className="flex gap-2 font-mono text-xs text-ink-soft shrink-0">
-                <button onClick={() => onEditar(p)} className="hover:text-petrol">editar</button>
-                <button onClick={() => onEliminar(p.id)} className="hover:text-clay">borrar</button>
+                <button onClick={() => onEditar(p)} className="hover:text-petrol">{t('comun.editar')}</button>
+                <button onClick={() => onEliminar(p.id)} className="hover:text-clay">{t('comun.borrar')}</button>
               </div>
             )}
           </div>
