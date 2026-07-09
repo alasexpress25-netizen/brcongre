@@ -45,7 +45,14 @@ export default function InformePredicacion() {
   }, [])
 
   const publicadorSeleccionado = publicadores.find((p) => p.id === form.publicador_id)
-  const esPrecursorRegular = publicadorSeleccionado?.servicio === 'precursor_regular'
+  // Un precursor -en cualquiera de sus formas- informa horas; un publicador común no.
+  // - precursor_regular / precursor_especial: designación permanente (columna servicio).
+  // - precursor_auxiliar: es mensual, por eso es un checkbox del propio formulario y no
+  //   una designación fija; si lo tildan ese mes, también corresponde pedir horas.
+  const esPrecursorPermanente =
+    publicadorSeleccionado?.servicio === 'precursor_regular' ||
+    publicadorSeleccionado?.servicio === 'precursor_especial'
+  const esPrecursor = esPrecursorPermanente || form.precursor_auxiliar
 
   async function enviar(e) {
     e.preventDefault()
@@ -64,7 +71,7 @@ export default function InformePredicacion() {
       p_participo: form.participo,
       p_cursos_biblicos: Number(form.cursos_biblicos) || 0,
       p_comentarios: form.comentarios || null,
-      p_horas: esPrecursorRegular && form.horas !== '' ? Number(form.horas) : null,
+      p_horas: esPrecursor && form.horas !== '' ? Number(form.horas) : null,
     })
     setEnviando(false)
     if (err) {
@@ -146,7 +153,7 @@ export default function InformePredicacion() {
             />
           </label>
 
-          {esPrecursorRegular && (
+          {esPrecursor && (
             <div>
               <label className="block text-sm font-medium mb-1">{t('informePredicacion.horas')}</label>
               <input
