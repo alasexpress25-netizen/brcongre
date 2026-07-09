@@ -361,6 +361,7 @@ export const es = {
     precursorAuxiliar: 'Precursor auxiliar',
     marqueSiParticipo: 'Marque la casilla si participó en alguna faceta de la predicación durante el mes',
     cursosBiblicos: 'Cursos Bíblicos',
+    horas: 'Horas',
     comentarios: 'Comentarios',
     enviando: 'Enviando…',
     enviar: 'Enviar',

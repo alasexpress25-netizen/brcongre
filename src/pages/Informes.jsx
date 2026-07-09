@@ -213,7 +213,7 @@ export default function Informes() {
                       {f.informado && (
                         <>
                           {f.precursor_auxiliar && ` · ${t('informes.precursorAuxiliar')}`}
-                          {typeof f.horas === 'number' && ` · ${f.horas} ${t('informes.horasAbrev')}`}
+                          {typeof f.horas === 'number' && f.servicio === 'precursor_regular' && ` · ${f.horas} ${t('informes.horasAbrev')}`}
                           {typeof f.cursos_biblicos === 'number' && f.cursos_biblicos > 0 && ` · ${f.cursos_biblicos} ${t('informes.cursosBiblicos')}`}
                         </>
                       )}

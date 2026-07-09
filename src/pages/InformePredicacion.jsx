@@ -28,6 +28,7 @@ export default function InformePredicacion() {
     precursor_auxiliar: false,
     participo: false,
     cursos_biblicos: 0,
+    horas: '',
     comentarios: '',
   })
   const [enviando, setEnviando] = useState(false)
@@ -37,11 +38,14 @@ export default function InformePredicacion() {
   useEffect(() => {
     supabase
       .from('publicadores')
-      .select('id, nombre')
+      .select('id, nombre, servicio')
       .eq('activo', true)
       .order('nombre')
       .then(({ data }) => setPublicadores(data || []))
   }, [])
+
+  const publicadorSeleccionado = publicadores.find((p) => p.id === form.publicador_id)
+  const esPrecursorRegular = publicadorSeleccionado?.servicio === 'precursor_regular'
 
   async function enviar(e) {
     e.preventDefault()
@@ -60,6 +64,7 @@ export default function InformePredicacion() {
       p_participo: form.participo,
       p_cursos_biblicos: Number(form.cursos_biblicos) || 0,
       p_comentarios: form.comentarios || null,
+      p_horas: esPrecursorRegular && form.horas !== '' ? Number(form.horas) : null,
     })
     setEnviando(false)
     if (err) {
@@ -140,6 +145,19 @@ export default function InformePredicacion() {
               className="w-5 h-5 accent-petrol shrink-0"
             />
           </label>
+
+          {esPrecursorRegular && (
+            <div>
+              <label className="block text-sm font-medium mb-1">{t('informePredicacion.horas')}</label>
+              <input
+                type="number"
+                min="0"
+                value={form.horas}
+                onChange={(e) => setForm({ ...form, horas: e.target.value })}
+                className="w-full border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-1">{t('informePredicacion.cursosBiblicos')}</label>
