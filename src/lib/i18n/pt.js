@@ -451,6 +451,7 @@ export const pt = {
     sinTareasCargadas: 'Nenhuma tarefa cadastrada.',
     confirmarEliminarParte: 'Excluir esta parte?',
     errorImportarWol: 'Não foi possível importar da WOL: ',
+    errorGuardarSemana: 'Não foi possível salvar a semana: ',
     notifPresidenteTitulo: 'Você foi designado para presidir Vida e Ministério',
     notifPresidenteCuerpo: 'Você vai presidir a programação de {fecha}.',
     notifOracionInicialTitulo: 'Você foi designado para a oração inicial',

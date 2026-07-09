@@ -451,6 +451,7 @@ export const es = {
     sinTareasCargadas: 'Sin tareas cargadas.',
     confirmarEliminarParte: '¿Eliminar esta parte?',
     errorImportarWol: 'No se pudo importar de WOL: ',
+    errorGuardarSemana: 'No se pudo guardar la semana: ',
     notifPresidenteTitulo: 'Te asignaron presidir Vida y Ministerio',
     notifPresidenteCuerpo: 'Vas a presidir el programa del {fecha}.',
     notifOracionInicialTitulo: 'Te asignaron la oración inicial',

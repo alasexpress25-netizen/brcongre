@@ -159,14 +159,59 @@ export default function VidaMinisterio() {
     e.preventDefault()
     const payload = { ...formSemana }
     Object.keys(payload).forEach((k) => { if (payload[k] === '') payload[k] = null })
-    const { data: nuevaSemana } = await supabase.from('semanas_vida_ministerio').insert(payload).select().single()
 
-    if (nuevaSemana && partesDetectadas.length > 0) {
+    // ¿Ya existe una semana con esta fecha_inicio? (fecha_inicio es UNIQUE en la
+    // base). Si existe -- típicamente porque se está reimportando la misma semana
+    // en otro idioma, o corrigiendo un dato -- actualizamos esa fila en vez de
+    // intentar insertar una nueva (eso fallaría por el constraint único y, antes
+    // de este fix, fallaba en silencio dejando el contenido viejo sin reemplazar).
+    const { data: semanaExistente } = await supabase
+      .from('semanas_vida_ministerio')
+      .select('id')
+      .eq('fecha_inicio', payload.fecha_inicio)
+      .maybeSingle()
+
+    let semana
+    let esReemplazo = false
+
+    if (semanaExistente) {
+      esReemplazo = true
+      const { data: actualizada, error: errorUpdate } = await supabase
+        .from('semanas_vida_ministerio')
+        .update(payload)
+        .eq('id', semanaExistente.id)
+        .select()
+        .single()
+      if (errorUpdate) {
+        alert(t('vidaMinisterio.errorGuardarSemana') + errorUpdate.message)
+        return
+      }
+      semana = actualizada
+    } else {
+      const { data: nuevaSemana, error: errorInsert } = await supabase
+        .from('semanas_vida_ministerio')
+        .insert(payload)
+        .select()
+        .single()
+      if (errorInsert) {
+        alert(t('vidaMinisterio.errorGuardarSemana') + errorInsert.message)
+        return
+      }
+      semana = nuevaSemana
+    }
+
+    if (semana && partesDetectadas.length > 0) {
+      // Si estamos reemplazando una semana existente, primero borramos sus
+      // partes viejas (por ejemplo, las que quedaron en español) para que no
+      // convivan mezcladas con las nuevas del idioma recién importado.
+      if (esReemplazo) {
+        await supabase.from('partes_vida_ministerio').delete().eq('semana_id', semana.id)
+      }
       const conteo = {}
       const partesPayload = partesDetectadas.map((p) => {
         conteo[p.seccion] = (conteo[p.seccion] || 0)
         const orden = conteo[p.seccion]++
-        return { ...p, semana_id: nuevaSemana.id, orden }
+        return { ...p, semana_id: semana.id, orden }
       })
       await supabase.from('partes_vida_ministerio').insert(partesPayload)
     }
