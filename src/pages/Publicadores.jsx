@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
@@ -164,14 +163,14 @@ export default function Publicadores() {
 
   if (!esEditor) {
     return (
-      <Layout>
+      <>
         <p className="text-ink-soft text-sm">{t('publicadores.soloSecretario')}</p>
-      </Layout>
+      </>
     )
   }
 
   return (
-    <Layout>
+    <>
       <div className="flex items-center justify-between mb-1 no-print">
         <h1 className="font-display text-2xl font-semibold">{t('publicadores.titulo')}</h1>
         <div className="flex gap-2">
@@ -345,6 +344,6 @@ export default function Publicadores() {
           </div>
         ))}
       </div>
-    </Layout>
+    </>
   )
 }

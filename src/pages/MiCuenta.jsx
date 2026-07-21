@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
@@ -68,7 +67,7 @@ export default function MiCuenta() {
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-sm mx-auto">
         <h1 className="font-display text-2xl font-semibold mb-1">{t('miCuenta.titulo')}</h1>
         <p className="text-sm text-ink-soft mb-6">
@@ -141,6 +140,6 @@ export default function MiCuenta() {
           </form>
         )}
       </div>
-    </Layout>
+    </>
   )
 }

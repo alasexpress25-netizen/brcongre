@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
@@ -111,14 +110,14 @@ export default function Informes() {
 
   if (!esEditor) {
     return (
-      <Layout>
+      <>
         <p className="text-ink-soft text-sm">{t('informes.soloSecretario')}</p>
-      </Layout>
+      </>
     )
   }
 
   return (
-    <Layout>
+    <>
       <div className="flex items-center justify-between mb-1 no-print">
         <h1 className="font-display text-2xl font-semibold">{t('informes.titulo')}</h1>
         <button onClick={imprimir} className="font-mono text-xs border border-petrol/30 text-petrol px-3 py-1.5 rounded-md hover:bg-petrol/10 transition-colors">
@@ -234,6 +233,6 @@ export default function Informes() {
           </div>
         ))}
       </div>
-    </Layout>
+    </>
   )
 }

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
@@ -58,14 +57,14 @@ export default function Configuracion() {
 
   if (!esAdmin) {
     return (
-      <Layout>
+      <>
         <p className="text-ink-soft text-sm">{t('configuracion.soloAdmin')}</p>
-      </Layout>
+      </>
     )
   }
 
   return (
-    <Layout>
+    <>
       <h1 className="font-display text-2xl font-semibold mb-1">{t('configuracion.titulo')}</h1>
       <p className="text-sm text-ink-soft mb-6">{t('configuracion.subtitulo')}</p>
 
@@ -149,6 +148,6 @@ export default function Configuracion() {
           </div>
         </form>
       )}
-    </Layout>
+    </>
   )
 }

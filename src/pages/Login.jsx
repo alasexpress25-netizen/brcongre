@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
 
@@ -28,7 +27,7 @@ export default function Login() {
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-sm mx-auto">
         <h1 className="font-display text-2xl font-semibold mb-1">{t('login.titulo')}</h1>
         <p className="text-sm text-ink-soft mb-6">{t('login.subtitulo')}</p>
@@ -62,6 +61,6 @@ export default function Login() {
           {t('login.sinCuenta')} <Link to="/registro" className="text-petrol underline">{t('login.crearCuenta')}</Link>
         </p>
       </div>
-    </Layout>
+    </>
   )
 }

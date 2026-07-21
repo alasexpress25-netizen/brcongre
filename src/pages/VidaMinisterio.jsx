@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { useSemana } from '../lib/SemanaContext'
@@ -373,14 +372,14 @@ export default function VidaMinisterio() {
 
   if (cargando) {
     return (
-      <Layout>
+      <>
         <p className="text-ink-soft text-sm">{t('comun.cargando')}</p>
-      </Layout>
+      </>
     )
   }
 
   return (
-    <Layout>
+    <>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl font-semibold">{t('vidaMinisterio.titulo')}</h1>
         {(esEditorEscuela || esEditorOraciones) && (
@@ -661,7 +660,7 @@ export default function VidaMinisterio() {
           </div>
         ))}
       </div>
-    </Layout>
+    </>
   )
 }
 

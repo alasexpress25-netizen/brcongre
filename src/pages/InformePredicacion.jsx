@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Layout from '../components/Layout'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
 
@@ -87,7 +86,7 @@ export default function InformePredicacion() {
   }
 
   return (
-    <Layout>
+    <>
       <h1 className="font-display text-2xl font-semibold mb-6">{t('informePredicacion.titulo')}</h1>
 
       {enviado ? (
@@ -199,6 +198,6 @@ export default function InformePredicacion() {
           </button>
         </form>
       )}
-    </Layout>
+    </>
   )
 }

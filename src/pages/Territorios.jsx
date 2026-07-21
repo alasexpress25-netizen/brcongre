@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
@@ -113,7 +112,7 @@ export default function Territorios() {
   }, [territorios, busqueda])
 
   return (
-    <Layout>
+    <>
       <div className="flex items-center justify-between mb-1">
         <h1 className="font-display text-2xl font-semibold">{t('territorios.titulo')}</h1>
         {esEditor && (
@@ -223,6 +222,6 @@ export default function Territorios() {
           </div>
         ))}
       </div>
-    </Layout>
+    </>
   )
 }

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { supabase } from '../lib/supabaseClient'
@@ -181,16 +180,16 @@ export default function Admin() {
 
   if (!esAdmin) {
     return (
-      <Layout>
+      <>
         <p className="text-ink-soft text-sm">{t('admin.soloAdmin')}</p>
-      </Layout>
+      </>
     )
   }
 
   const pendientes = usuarios.filter((u) => !u.aprobado)
 
   return (
-    <Layout>
+    <>
       <h1 className="font-display text-2xl font-semibold mb-1">{t('admin.titulo')}</h1>
       <p className="text-sm text-ink-soft mb-1">
         {pendientes.length > 0
@@ -312,6 +311,6 @@ export default function Admin() {
           </div>
         ))}
       </div>
-    </Layout>
+    </>
   )
 }

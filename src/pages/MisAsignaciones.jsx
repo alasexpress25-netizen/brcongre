@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { useSemana } from '../lib/SemanaContext'
@@ -177,14 +176,12 @@ export default function MisAsignaciones() {
 
   if (!email) {
     return (
-      <Layout>
-        <p className="text-ink-soft text-sm">{t('misAsignaciones.identificate')}</p>
-      </Layout>
+      <p className="text-ink-soft text-sm">{t('misAsignaciones.identificate')}</p>
     )
   }
 
   return (
-    <Layout>
+    <>
       {puedeEditar('secretario') && <CompartirApp />}
 
       <h1 className="font-display text-2xl font-semibold mb-1">{t('misAsignaciones.titulo')}</h1>
@@ -211,6 +208,6 @@ export default function MisAsignaciones() {
           </div>
         ))}
       </div>
-    </Layout>
+    </>
   )
 }
