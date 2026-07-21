@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
+import { useSemana } from '../lib/SemanaContext'
 import { supabase } from '../lib/supabaseClient'
 
 const vacio = { titulo: '', descripcion: '', fecha_inicio: '', ubicacion: '' }
@@ -19,6 +20,7 @@ function formatearFecha(iso, locale) {
 export default function Calendario() {
   const { puedeEditar } = useAuth()
   const { t, locale } = useI18n()
+  const semana = useSemana()
   const esEditor = puedeEditar('calendario')
   const [eventos, setEventos] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -28,10 +30,13 @@ export default function Calendario() {
 
   async function cargar() {
     setCargando(true)
+    // Igual que en Vida y Ministerio: mostramos los eventos que empiezan en la
+    // semana elegida con las flechas del encabezado, no todos los futuros.
     const { data } = await supabase
       .from('eventos_calendario')
       .select('*')
-      .gte('fecha_inicio', new Date().toISOString().slice(0, 10))
+      .gte('fecha_inicio', `${semana.lunesISO}T00:00:00`)
+      .lt('fecha_inicio', `${semana.domingoISO}T23:59:59.999`)
       .order('fecha_inicio', { ascending: true })
     setEventos(data || [])
     setCargando(false)
@@ -39,7 +44,7 @@ export default function Calendario() {
 
   useEffect(() => {
     cargar()
-  }, [])
+  }, [semana.lunesISO, semana.domingoISO])
 
   function editar(e) {
     setForm({
@@ -53,7 +58,7 @@ export default function Calendario() {
   }
 
   function nuevo() {
-    setForm(vacio)
+    setForm({ ...vacio, fecha_inicio: `${semana.lunesISO}T19:00` })
     setEditandoId(null)
     setMostrarForm(true)
   }

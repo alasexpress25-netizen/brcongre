@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
+import { useSemana } from '../lib/SemanaContext'
 import { supabase } from '../lib/supabaseClient'
 
-const vacio = { titulo: '', descripcion: '', link_url: '' }
+const vacio = { titulo: '', descripcion: '', link_url: '', fecha_publicacion: '' }
 
 export default function Anuncios() {
   const { puedeEditar } = useAuth()
   const { t } = useI18n()
+  const semana = useSemana()
   const esEditor = puedeEditar('anuncios')
   const [anuncios, setAnuncios] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -18,10 +20,14 @@ export default function Anuncios() {
 
   async function cargar() {
     setCargando(true)
+    // Igual que en Vida y Ministerio: mostramos los anuncios publicados en la
+    // semana elegida con las flechas del encabezado, no todos los activos.
     const { data } = await supabase
       .from('anuncios')
       .select('*')
       .eq('activo', true)
+      .gte('fecha_publicacion', semana.lunesISO)
+      .lte('fecha_publicacion', semana.domingoISO)
       .order('orden', { ascending: true })
       .order('fecha_publicacion', { ascending: false })
     setAnuncios(data || [])
@@ -30,26 +36,27 @@ export default function Anuncios() {
 
   useEffect(() => {
     cargar()
-  }, [])
+  }, [semana.lunesISO, semana.domingoISO])
 
   function editar(a) {
-    setForm({ titulo: a.titulo, descripcion: a.descripcion || '', link_url: a.link_url || '' })
+    setForm({ titulo: a.titulo, descripcion: a.descripcion || '', link_url: a.link_url || '', fecha_publicacion: a.fecha_publicacion || '' })
     setEditandoId(a.id)
     setMostrarForm(true)
   }
 
   function nuevo() {
-    setForm(vacio)
+    setForm({ ...vacio, fecha_publicacion: semana.lunesISO })
     setEditandoId(null)
     setMostrarForm(true)
   }
 
   async function guardar(e) {
     e.preventDefault()
+    const payload = { ...form, fecha_publicacion: form.fecha_publicacion || null }
     if (editandoId) {
-      await supabase.from('anuncios').update(form).eq('id', editandoId)
+      await supabase.from('anuncios').update(payload).eq('id', editandoId)
     } else {
-      await supabase.from('anuncios').insert(form)
+      await supabase.from('anuncios').insert(payload)
     }
     setMostrarForm(false)
     setForm(vacio)
@@ -99,6 +106,16 @@ export default function Anuncios() {
             onChange={(e) => setForm({ ...form, link_url: e.target.value })}
             className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
           />
+          <div>
+            <label className="text-xs text-ink-soft font-mono block mb-1.5">{t('anuncios.fechaPublicacion')}</label>
+            <input
+              required
+              type="date"
+              value={form.fecha_publicacion}
+              onChange={(e) => setForm({ ...form, fecha_publicacion: e.target.value })}
+              className="border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol"
+            />
+          </div>
           <div className="flex gap-2">
             <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
               {t('comun.guardar')}

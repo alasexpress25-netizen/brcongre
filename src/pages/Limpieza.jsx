@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
+import { useSemana } from '../lib/SemanaContext'
 import { supabase } from '../lib/supabaseClient'
 import { notificar } from '../lib/notificar'
 
@@ -15,6 +16,7 @@ function formatearRango(inicio, fin, locale) {
 export default function Limpieza() {
   const { puedeEditar } = useAuth()
   const { t, locale } = useI18n()
+  const semana = useSemana()
   const esEditor = puedeEditar('limpieza')
   const [turnos, setTurnos] = useState([])
   const [grupos, setGrupos] = useState([])
@@ -25,11 +27,15 @@ export default function Limpieza() {
 
   async function cargar() {
     setCargando(true)
+    // Igual que en Vida y Ministerio: mostramos los turnos que se cruzan con la
+    // semana elegida con las flechas del encabezado (un turno puede durar más
+    // de una semana, por eso comparamos el rango completo, no solo el inicio).
     const [{ data: tu }, { data: g }] = await Promise.all([
       supabase
         .from('turnos_limpieza')
         .select('*, grupos(nombre)')
-        .gte('fecha_fin', new Date().toISOString().slice(0, 10))
+        .lte('fecha_inicio', semana.domingoISO)
+        .gte('fecha_fin', semana.lunesISO)
         .order('fecha_inicio', { ascending: true }),
       supabase.from('grupos').select('*').order('nombre'),
     ])
@@ -40,7 +46,7 @@ export default function Limpieza() {
 
   useEffect(() => {
     cargar()
-  }, [])
+  }, [semana.lunesISO, semana.domingoISO])
 
   function editar(tu) {
     setForm({ grupo_id: tu.grupo_id || '', fecha_inicio: tu.fecha_inicio, fecha_fin: tu.fecha_fin, notas: tu.notas || '' })
@@ -49,7 +55,7 @@ export default function Limpieza() {
   }
 
   function nuevo() {
-    setForm(vacio)
+    setForm({ ...vacio, fecha_inicio: semana.lunesISO, fecha_fin: semana.domingoISO })
     setEditandoId(null)
     setMostrarForm(true)
   }

@@ -2,21 +2,13 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
+import { useSemana } from '../lib/SemanaContext'
 import { supabase } from '../lib/supabaseClient'
 
 const vacioSalida = { grupo_id: '', fecha: '', hora: '', punto_encuentro: '', encargado_id: '', notas: '', territorio_ids: [] }
 
 function formatearFecha(f, locale) {
   return new Date(f + 'T00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'short' })
-}
-
-// Lunes (inicio de semana) de la semana actual, en formato YYYY-MM-DD
-function lunesActual() {
-  const hoy = new Date()
-  const dia = (hoy.getDay() + 6) % 7 // 0 = lunes ... 6 = domingo
-  const lunes = new Date(hoy)
-  lunes.setDate(hoy.getDate() - dia)
-  return lunes.toISOString().slice(0, 10)
 }
 
 // Lunes de la semana a la que pertenece una fecha YYYY-MM-DD dada
@@ -58,6 +50,7 @@ function agruparPorSemana(lista) {
 export default function Predicacion() {
   const { puedeEditar } = useAuth()
   const { t, locale } = useI18n()
+  const semana = useSemana()
   const esEditor = puedeEditar('predicacion')
   const esSecretario = puedeEditar('secretario')
   const [grupos, setGrupos] = useState([])
@@ -81,7 +74,8 @@ export default function Predicacion() {
         .select(
           '*, grupos(nombre), publicadores!salidas_predicacion_encargado_id_fkey(nombre), salidas_predicacion_territorios(territorio_id)'
         )
-        .gte('fecha', lunesActual())
+        .gte('fecha', semana.lunesISO)
+        .lte('fecha', semana.domingoISO)
         .order('fecha', { ascending: true })
         .order('hora', { ascending: true }),
     ])
@@ -94,7 +88,7 @@ export default function Predicacion() {
 
   useEffect(() => {
     cargar()
-  }, [])
+  }, [semana.lunesISO, semana.domingoISO])
 
   async function agregarGrupo(e) {
     e.preventDefault()
@@ -128,7 +122,7 @@ export default function Predicacion() {
   }
 
   function nueva() {
-    setForm(vacioSalida)
+    setForm({ ...vacioSalida, fecha: semana.lunesISO })
     setEditandoId(null)
     setMostrarForm(true)
   }

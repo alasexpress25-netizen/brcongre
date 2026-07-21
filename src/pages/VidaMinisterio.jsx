@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
+import { useSemana } from '../lib/SemanaContext'
 import { supabase } from '../lib/supabaseClient'
 import { notificar } from '../lib/notificar'
 
@@ -35,14 +36,6 @@ function formatearRango(fechaInicio, locale) {
   fin.setDate(inicio.getDate() + 6)
   const opciones = { day: 'numeric', month: 'short' }
   return `${inicio.toLocaleDateString(locale, opciones)} — ${fin.toLocaleDateString(locale, opciones)}`
-}
-
-function lunesActual() {
-  const hoy = new Date()
-  const dia = (hoy.getDay() + 6) % 7
-  const lunes = new Date(hoy)
-  lunes.setDate(hoy.getDate() - dia)
-  return lunes.toISOString().slice(0, 10)
 }
 
 const MESES = [
@@ -107,6 +100,7 @@ function parsearPrograma(texto) {
 export default function VidaMinisterio() {
   const { t, locale, idioma } = useI18n()
   const { puedeEditar } = useAuth()
+  const semana = useSemana()
   const esEditorEscuela = puedeEditar('vida_ministerio_escuela')
   const esEditorOraciones = puedeEditar('vida_ministerio_oraciones')
   const esEditorTareas = puedeEditar('vida_ministerio_tareas')
@@ -137,14 +131,16 @@ export default function VidaMinisterio() {
 
   async function cargar() {
     setCargando(true)
-    const { data: sems } = await supabase
+    // Mostramos solo la semana elegida con las flechas del encabezado (semana.lunesISO),
+    // no una ventana fija "desde hoy": así navegar hacia atrás/adelante muestra la
+    // semana correspondiente aunque ya haya pasado.
+    const { data: sem } = await supabase
       .from('semanas_vida_ministerio')
       .select('*, partes_vida_ministerio(*, asignado:asignado_id(nombre), ayudante:ayudante_id(nombre)), presidente:presidente_id(nombre), oracion_inicial:oracion_inicial_id(nombre), oracion_final:oracion_final_id(nombre), tareas_mecanicas(*)')
-      .gte('fecha_inicio', lunesActual())
-      .order('fecha_inicio', { ascending: true })
-      .limit(esEditorAlguno ? 16 : 4)
+      .eq('fecha_inicio', semana.lunesISO)
+      .maybeSingle()
 
-    setSemanas(sems || [])
+    setSemanas(sem ? [sem] : [])
 
     const { data: perfiles } = await supabase.from('publicadores').select('id, nombre').eq('activo', true).order('nombre')
     setPersonas(perfiles || [])
@@ -153,7 +149,7 @@ export default function VidaMinisterio() {
 
   useEffect(() => {
     cargar()
-  }, [esEditorAlguno])
+  }, [esEditorAlguno, semana.lunesISO])
 
   async function crearSemana(e) {
     e.preventDefault()
@@ -388,7 +384,7 @@ export default function VidaMinisterio() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl font-semibold">{t('vidaMinisterio.titulo')}</h1>
         {(esEditorEscuela || esEditorOraciones) && (
-          <button onClick={() => setMostrarFormSemana(true)} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark">
+          <button onClick={() => { setFormSemana((f) => ({ ...f, fecha_inicio: f.fecha_inicio || semana.lunesISO })); setMostrarFormSemana(true) }} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark">
             {t('vidaMinisterio.crearSemana')}
           </button>
         )}

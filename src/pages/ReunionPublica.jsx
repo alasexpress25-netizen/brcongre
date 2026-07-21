@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
+import { useSemana } from '../lib/SemanaContext'
 import { supabase } from '../lib/supabaseClient'
 import { notificar } from '../lib/notificar'
 
@@ -32,6 +33,7 @@ function NombreOFranja({ nombre }) {
 export default function ReunionPublica() {
   const { puedeEditar } = useAuth()
   const { t, locale } = useI18n()
+  const semana = useSemana()
   const esEditor = puedeEditar('reunion_publica')
   const esEditorTareas = puedeEditar('vida_ministerio_tareas')
 
@@ -49,11 +51,14 @@ export default function ReunionPublica() {
 
   async function cargar() {
     setCargando(true)
+    // Igual que en Vida y Ministerio: mostramos la reunión de la semana elegida
+    // con las flechas del encabezado, no "las próximas desde hoy".
     const [{ data: r }, { data: p }] = await Promise.all([
       supabase
         .from('reuniones_publicas')
         .select('*, presidente:presidente_id(nombre), conductor_atalaya:conductor_atalaya_id(nombre), lector:lector_id(nombre), orador:orador_id(nombre), tareas_mecanicas_reunion_publica(*)')
-        .gte('fecha', new Date().toISOString().slice(0, 10))
+        .gte('fecha', semana.lunesISO)
+        .lte('fecha', semana.domingoISO)
         .order('fecha', { ascending: true }),
       supabase.from('publicadores').select('id, nombre').eq('activo', true).order('nombre'),
     ])
@@ -64,7 +69,7 @@ export default function ReunionPublica() {
 
   useEffect(() => {
     cargar()
-  }, [])
+  }, [semana.lunesISO, semana.domingoISO])
 
   function editar(r) {
     setForm({
@@ -85,7 +90,7 @@ export default function ReunionPublica() {
   }
 
   function nueva() {
-    setForm(vacio)
+    setForm({ ...vacio, fecha: semana.domingoISO })
     setEditandoId(null)
     setMostrarForm(true)
   }

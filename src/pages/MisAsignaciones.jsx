@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/AuthContext'
 import { useI18n } from '../lib/i18n/I18nContext'
+import { useSemana } from '../lib/SemanaContext'
 import { supabase } from '../lib/supabaseClient'
 import { getIdentidad } from '../lib/identidad'
 
@@ -62,6 +63,7 @@ function CompartirApp() {
 export default function MisAsignaciones() {
   const { session, perfil, puedeEditar } = useAuth()
   const { t, locale } = useI18n()
+  const semana = useSemana()
   const identidad = getIdentidad()
   const email = session?.user?.email || identidad?.email
   const nombreMostrar = perfil?.nombre || identidad?.nombre
@@ -72,23 +74,15 @@ export default function MisAsignaciones() {
 
   useEffect(() => {
     if (email) cargar(email)
-  }, [email])
+  }, [email, semana.lunesISO, semana.domingoISO])
 
   async function cargar(email) {
     setCargando(true)
-    const ahora = new Date()
-    const hoy = ahora.toISOString().slice(0, 10)
 
-    // semanas_vida_ministerio guarda fecha_inicio = lunes de esa semana. Si
-    // filtramos por fecha_inicio >= hoy, la semana en curso desaparece apenas
-    // pasa el lunes (ej. si hoy es jueves, el lunes de esta semana ya quedó
-    // "en el pasado" aunque la semana siga vigente). Por eso comparamos
-    // contra el lunes de la semana actual, no contra la fecha de hoy.
-    const diaSemana = ahora.getDay() // 0 = domingo … 6 = sábado
-    const diffLunes = diaSemana === 0 ? -6 : 1 - diaSemana
-    const lunesActual = new Date(ahora)
-    lunesActual.setDate(ahora.getDate() + diffLunes)
-    const inicioSemanaActual = lunesActual.toISOString().slice(0, 10)
+    // Igual que en Vida y Ministerio: mostramos las asignaciones de la semana
+    // elegida con las flechas del encabezado, no "las próximas desde hoy".
+    const inicioSemana = semana.lunesISO
+    const finSemana = semana.domingoISO
 
     // Todas las asignaciones (Predicación, Vida y Ministerio, Reunión Pública
     // y Limpieza) se guardan contra la ficha de "Publicadores", así que
@@ -107,19 +101,19 @@ export default function MisAsignaciones() {
 
     const [salidas, partes, semanasVM, reuniones, limpieza, tareasVM, tareasRP] = await Promise.all([
       publicadorId
-        ? supabase.from('salidas_predicacion').select('id, fecha, hora, punto_encuentro, grupos(nombre)').eq('encargado_id', publicadorId).gte('fecha', hoy)
+        ? supabase.from('salidas_predicacion').select('id, fecha, hora, punto_encuentro, grupos(nombre)').eq('encargado_id', publicadorId).gte('fecha', inicioSemana).lte('fecha', finSemana)
         : sinResultados,
       publicadorId
         ? supabase.from('partes_vida_ministerio').select('id, titulo, seccion, semanas_vida_ministerio(fecha_inicio)').or(`asignado_id.eq.${publicadorId},ayudante_id.eq.${publicadorId}`)
         : sinResultados,
       publicadorId
-        ? supabase.from('semanas_vida_ministerio').select('id, fecha_inicio, presidente_id, oracion_inicial_id, oracion_final_id').gte('fecha_inicio', inicioSemanaActual)
+        ? supabase.from('semanas_vida_ministerio').select('id, fecha_inicio, presidente_id, oracion_inicial_id, oracion_final_id').eq('fecha_inicio', inicioSemana)
         : sinResultados,
       publicadorId
-        ? supabase.from('reuniones_publicas').select('id, fecha, tema, orador_id, presidente_id, conductor_atalaya_id, lector_id').gte('fecha', hoy)
+        ? supabase.from('reuniones_publicas').select('id, fecha, tema, orador_id, presidente_id, conductor_atalaya_id, lector_id').gte('fecha', inicioSemana).lte('fecha', finSemana)
         : sinResultados,
       grupoId
-        ? supabase.from('turnos_limpieza').select('id, fecha_inicio, fecha_fin, grupos(nombre)').eq('grupo_id', grupoId).gte('fecha_fin', hoy)
+        ? supabase.from('turnos_limpieza').select('id, fecha_inicio, fecha_fin, grupos(nombre)').eq('grupo_id', grupoId).lte('fecha_inicio', finSemana).gte('fecha_fin', inicioSemana)
         : sinResultados,
       publicadorId
         ? supabase.from('tareas_mecanicas').select('*, semanas_vida_ministerio(fecha_inicio)')
@@ -137,7 +131,7 @@ export default function MisAsignaciones() {
     }))
 
     ;(partes.data || [])
-      .filter((p) => p.semanas_vida_ministerio?.fecha_inicio >= inicioSemanaActual)
+      .filter((p) => p.semanas_vida_ministerio?.fecha_inicio === inicioSemana)
       .forEach((p) => lista.push({
         tipo: t('misAsignaciones.tipo_vidaMinisterio'), titulo: p.titulo, fecha: p.semanas_vida_ministerio?.fecha_inicio, detalle: p.seccion.replace('_', ' '),
       }))
@@ -161,7 +155,7 @@ export default function MisAsignaciones() {
     }))
 
     ;(tareasVM.data || [])
-      .filter((tr) => tr.semanas_vida_ministerio?.fecha_inicio >= inicioSemanaActual)
+      .filter((tr) => tr.semanas_vida_ministerio?.fecha_inicio === inicioSemana)
       .forEach((tr) => {
         CLAVES_TAREAS.forEach((clave) => {
           if (tr[clave] === publicadorId) lista.push({ tipo: t('misAsignaciones.tipo_vidaMinisterio'), titulo: t(`misAsignaciones.tarea_${clave}`), fecha: tr.semanas_vida_ministerio.fecha_inicio, detalle: t('misAsignaciones.tareaMecanica') })
@@ -169,7 +163,7 @@ export default function MisAsignaciones() {
       })
 
     ;(tareasRP.data || [])
-      .filter((tr) => tr.reuniones_publicas?.fecha >= hoy)
+      .filter((tr) => tr.reuniones_publicas?.fecha >= inicioSemana && tr.reuniones_publicas?.fecha <= finSemana)
       .forEach((tr) => {
         CLAVES_TAREAS.forEach((clave) => {
           if (tr[clave] === publicadorId) lista.push({ tipo: t('misAsignaciones.tipo_reunionPublica'), titulo: t(`misAsignaciones.tarea_${clave}`), fecha: tr.reuniones_publicas.fecha, detalle: t('misAsignaciones.tareaMecanica') })
