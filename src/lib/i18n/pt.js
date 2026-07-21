@@ -13,6 +13,8 @@ export const pt = {
     configuracion: 'Configurações',
     cerrarSesion: 'Sair',
     cambiarIdentidad: 'Trocar identidade',
+    informe: 'Relatório',
+    solicitudPrecursorAuxiliar: 'Solicitação Pioneiro Aux.',
   },
   index: {
     informePredicacion: '📝 Informe de Pregação',
@@ -86,6 +88,8 @@ export const pt = {
     iniciarSesion: 'entrar',
     reunionPublicaCorta: 'Reunião pública',
     vidaMinisterioCorta: 'Vida e Ministério',
+    noSoyYo: 'Não sou eu',
+    entrar: 'Entrar',
   },
   footer: {
     disenadoPor: 'Desenhado e criado por La Visual Mk',

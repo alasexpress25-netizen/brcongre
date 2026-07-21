@@ -13,6 +13,8 @@ export const es = {
     configuracion: 'Configuración',
     cerrarSesion: 'Cerrar sesión',
     cambiarIdentidad: 'Cambiar identidad',
+    informe: 'Informe',
+    solicitudPrecursorAuxiliar: 'Solicitud Prec. Auxiliar',
   },
   index: {
     informePredicacion: '📝 Informe de Predicación',
@@ -86,6 +88,8 @@ export const es = {
     iniciarSesion: 'iniciar sesión',
     reunionPublicaCorta: 'Reunión pública',
     vidaMinisterioCorta: 'Vida y Ministerio',
+    noSoyYo: 'No soy yo',
+    entrar: 'Entrar',
   },
   footer: {
     disenadoPor: 'Diseñado y creado por La Visual Mk',
