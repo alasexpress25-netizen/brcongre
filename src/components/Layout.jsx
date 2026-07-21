@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { useConfig } from '../lib/useConfig'
 import { useI18n } from '../lib/i18n/I18nContext'
@@ -47,7 +47,7 @@ function SelectorIdioma() {
   )
 }
 
-export default function Layout({ children }) {
+export default function Layout() {
   const { config } = useConfig()
   const { session, perfil, cerrarSesion, esAdmin, puedeEditar } = useAuth()
   const { t, locale } = useI18n()
@@ -56,16 +56,17 @@ export default function Layout({ children }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const identidad = getIdentidad()
   const navRef = useRef(null)
+  const location = useLocation()
 
-  // Layout se monta de nuevo en cada navegación (cada página envuelve su
-  // contenido en <Layout>), así que el <nav> siempre arranca con scroll en 0.
-  // Si el ítem activo queda fuera de vista, lo traemos a la vista al montar.
+  // Layout ahora es una ruta padre persistente (no se remonta al navegar),
+  // así que reforzamos que el ítem activo del menú quede visible en cada
+  // cambio de ruta, por si el scroll interno del <nav> lo dejó fuera de vista.
   useEffect(() => {
     const activo = navRef.current?.querySelector('[aria-current="page"]')
     if (activo) {
       activo.scrollIntoView({ block: 'nearest' })
     }
-  }, [])
+  }, [location.pathname])
 
   const nombreMostrado = perfil?.nombre || identidad?.nombre || ''
 
@@ -284,7 +285,9 @@ export default function Layout({ children }) {
 
       {/* ===== Contenido ===== */}
       <main className="flex-1 w-full pt-20 md:pl-64">
-        <div className="max-w-4xl mx-auto px-5 py-8">{children}</div>
+        <div className="max-w-4xl mx-auto px-5 py-8">
+          <Outlet />
+        </div>
       </main>
 
       <footer className="border-t border-ink/10 bg-paper-dim md:pl-64">
