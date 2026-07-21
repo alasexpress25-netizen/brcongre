@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import GateIdentificacion from './components/GateIdentificacion'
 import PantallaInstalacion from './components/PantallaInstalacion'
+import Layout from './components/Layout'
 import { SemanaProvider } from './lib/SemanaContext'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
@@ -26,24 +27,26 @@ export default function App() {
       <GateIdentificacion>
         <SemanaProvider>
           <Routes>
-          <Route path="/" element={<MisAsignaciones />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/registro" element={<Registro />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/configuracion" element={<Configuracion />} />
-          <Route path="/mi-cuenta" element={<MiCuenta />} />
-          <Route path="/publicadores" element={<Publicadores />} />
-          <Route path="/mis-asignaciones" element={<Navigate to="/" replace />} />
-          <Route path="/predicacion" element={<Predicacion />} />
-          <Route path="/territorios" element={<Territorios />} />
-          <Route path="/vida-ministerio" element={<VidaMinisterio />} />
-          <Route path="/reunion-publica" element={<ReunionPublica />} />
-          <Route path="/limpieza" element={<Limpieza />} />
-          <Route path="/anuncios" element={<Anuncios />} />
-          <Route path="/calendario" element={<Calendario />} />
-          <Route path="/informe-predicacion" element={<InformePredicacion />} />
-          <Route path="/precursor-auxiliar" element={<PrecursorAuxiliar />} />
-          <Route path="/informes" element={<Informes />} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<MisAsignaciones />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/registro" element={<Registro />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/configuracion" element={<Configuracion />} />
+            <Route path="/mi-cuenta" element={<MiCuenta />} />
+            <Route path="/publicadores" element={<Publicadores />} />
+            <Route path="/mis-asignaciones" element={<Navigate to="/" replace />} />
+            <Route path="/predicacion" element={<Predicacion />} />
+            <Route path="/territorios" element={<Territorios />} />
+            <Route path="/vida-ministerio" element={<VidaMinisterio />} />
+            <Route path="/reunion-publica" element={<ReunionPublica />} />
+            <Route path="/limpieza" element={<Limpieza />} />
+            <Route path="/anuncios" element={<Anuncios />} />
+            <Route path="/calendario" element={<Calendario />} />
+            <Route path="/informe-predicacion" element={<InformePredicacion />} />
+            <Route path="/precursor-auxiliar" element={<PrecursorAuxiliar />} />
+            <Route path="/informes" element={<Informes />} />
+          </Route>
           </Routes>
         </SemanaProvider>
       </GateIdentificacion>
