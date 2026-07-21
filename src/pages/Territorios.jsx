@@ -124,7 +124,7 @@ export default function Territorios() {
       <p className="text-sm text-ink-soft mb-6">{territorios.length} {t('territorios.totalTerritorios')}</p>
 
       {mostrarForm && (
-        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-surface p-4 flex flex-col gap-3">
           {error && <p className="text-sm text-clay">{error}</p>}
           <div className="flex gap-3">
             <input
@@ -192,7 +192,7 @@ export default function Territorios() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {filtrados.map((terr) => (
-          <div key={terr.id} className="border border-ink/10 rounded-lg bg-white p-4">
+          <div key={terr.id} className="border border-ink/10 rounded-lg bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-display text-lg font-semibold">{t('territorios.territorioNumero')} {terr.numero}</h3>

@@ -203,7 +203,7 @@ export default function Admin() {
         {' '}{t('admin.notaFinal')}
       </p>
 
-      <details className="mb-6 border border-ink/10 rounded-lg bg-white p-4" open={usuarios.length === 0}>
+      <details className="mb-6 border border-ink/10 rounded-lg bg-surface p-4" open={usuarios.length === 0}>
         <summary className="cursor-pointer font-mono text-xs text-ink-soft">{t('admin.agregarCuentaNueva')}</summary>
         <p className="text-xs text-ink-soft mt-2">{t('admin.ayudaCrearCuenta')}</p>
         <form onSubmit={crearCuenta} className="mt-3 flex flex-col sm:flex-row gap-2">
@@ -241,7 +241,7 @@ export default function Admin() {
 
       <div className="flex flex-col gap-4">
         {usuarios.map((u) => (
-          <div key={u.id} className={`border rounded-lg bg-white p-4 ${!u.aprobado ? 'border-gold' : 'border-ink/10'}`}>
+          <div key={u.id} className={`border rounded-lg bg-surface p-4 ${!u.aprobado ? 'border-gold' : 'border-ink/10'}`}>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
               <div>
                 <p className="font-display font-semibold">{u.nombre}</p>

@@ -4,7 +4,7 @@ export default function SeccionCard({ to, titulo, descripcion, icono }) {
   return (
     <Link
       to={to}
-      className="group relative flex flex-col justify-between rounded-lg border border-ink/10 bg-white p-5 min-h-[132px] transition-all hover:border-petrol hover:-translate-y-0.5 hover:shadow-[0_4px_0_0_rgba(16,71,77,0.15)]"
+      className="group relative flex flex-col justify-between rounded-lg border border-ink/10 bg-surface p-5 min-h-[132px] transition-all hover:border-petrol hover:-translate-y-0.5 hover:shadow-[0_4px_0_0_rgba(16,71,77,0.15)]"
     >
       <div className="flex items-start justify-between">
         <span className="text-2xl">{icono}</span>

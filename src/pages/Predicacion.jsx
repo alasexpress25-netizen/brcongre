@@ -172,7 +172,7 @@ export default function Predicacion() {
       </div>
 
       {esSecretario && (
-        <details className="mb-6 border border-ink/10 rounded-lg bg-white p-4">
+        <details className="mb-6 border border-ink/10 rounded-lg bg-surface p-4">
           <summary className="cursor-pointer font-mono text-xs text-ink-soft">{t('predicacion.gestionarGrupos')} ({grupos.length})</summary>
           <ul className="mt-3 flex flex-wrap gap-2">
             {grupos.map((g) => (
@@ -192,7 +192,7 @@ export default function Predicacion() {
       )}
 
       {mostrarForm && (
-        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-surface p-4 flex flex-col gap-3">
           <select
             value={form.grupo_id}
             onChange={(e) => setForm({ ...form, grupo_id: e.target.value })}
@@ -286,7 +286,7 @@ export default function Predicacion() {
               {t('predicacion.semanaDe', { rango: formatearRangoSemana(lunes, locale()) })}
             </h2>
             {salidasSemana.map((s) => (
-              <div key={s.id} className="border border-ink/10 rounded-lg bg-white p-4">
+              <div key={s.id} className="border border-ink/10 rounded-lg bg-surface p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-display text-lg font-semibold">{s.grupos?.nombre || t('predicacion.grupoGeneral')}</h3>

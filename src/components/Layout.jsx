@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { useConfig } from '../lib/useConfig'
 import { useI18n } from '../lib/i18n/I18nContext'
+import { useTema } from '../lib/TemaContext'
 import { getIdentidad, limpiarIdentidad } from '../lib/identidad'
 import { useSemana } from '../lib/SemanaContext'
 import { formatearRango } from '../lib/semanas'
@@ -20,9 +21,27 @@ import {
   IconPrecursorAuxiliar,
   IconEntrar,
   IconCambiarIdentidad,
+  IconSol,
+  IconLuna,
   IconLogo,
   DecoracionLateral,
 } from './icons/NavIcons'
+
+function BotonTema() {
+  const { tema, alternarTema } = useTema()
+  const { t } = useI18n()
+  const esOscuro = tema === 'oscuro'
+  return (
+    <button
+      onClick={alternarTema}
+      aria-label={esOscuro ? t('tema.activarClaro') : t('tema.activarOscuro')}
+      title={esOscuro ? t('tema.activarClaro') : t('tema.activarOscuro')}
+      className="w-7 h-7 flex items-center justify-center rounded-md text-paper/75 hover:text-gold-soft hover:bg-paper/10 transition-colors shrink-0"
+    >
+      {esOscuro ? <IconSol className="w-4 h-4" /> : <IconLuna className="w-4 h-4" />}
+    </button>
+  )
+}
 
 function SelectorIdioma() {
   const { idioma, setIdioma, t } = useI18n()
@@ -178,6 +197,7 @@ export default function Layout() {
           {/* Derecha: idioma + entrar/salir */}
           <div className="flex items-center justify-end gap-2 sm:gap-3 min-w-0">
             <SelectorIdioma />
+            <BotonTema />
             {session ? (
               <button
                 onClick={cerrarSesion}

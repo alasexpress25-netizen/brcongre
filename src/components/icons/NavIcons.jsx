@@ -125,6 +125,23 @@ export function IconCambiarIdentidad(props) {
   )
 }
 
+export function IconSol(props) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="3.6" />
+      <path d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4M17.7 17.7l-1.4-1.4M7.7 7.7 6.3 6.3" />
+    </svg>
+  )
+}
+
+export function IconLuna(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M19.5 14.3A8 8 0 1 1 9.7 4.5a6.4 6.4 0 0 0 9.8 9.8Z" />
+    </svg>
+  )
+}
+
 // Logo diamante para la cabecera del menú lateral (estilo del boceto).
 export function IconLogo(props) {
   return (

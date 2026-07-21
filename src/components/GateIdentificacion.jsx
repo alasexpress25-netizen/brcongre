@@ -51,7 +51,7 @@ export default function GateIdentificacion({ children }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-paper px-5">
-      <div className="w-full max-w-sm border border-ink/10 rounded-lg bg-white p-6">
+      <div className="w-full max-w-sm border border-ink/10 rounded-lg bg-surface p-6">
         <h1 className="font-display text-xl font-semibold mb-1">{t('gate.titulo')}</h1>
         <p className="text-sm text-ink-soft mb-5">
           {t('gate.subtitulo')}

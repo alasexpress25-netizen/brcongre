@@ -14,6 +14,20 @@
   --color-gold: #B8892B;
   --color-gold-soft: #E4C77D;
   --color-clay: #A8493C;
+  --color-surface: #FFFFFF;
+}
+
+/* Modo oscuro: se activa agregando la clase .dark al <html>.
+   Como todos los colores de la app son tokens semánticos (paper, ink,
+   surface, etc.) referenciados con var(--color-*), alcanza con redefinir
+   estas variables acá — no hace falta tocar los componentes ni las páginas. */
+.dark {
+  color-scheme: dark;
+  --color-paper: #161F1E;
+  --color-paper-dim: #1D2726;
+  --color-ink: #EDEAE1;
+  --color-ink-soft: #A9B7B4;
+  --color-surface: #212B2A;
 }
 
 html {
@@ -24,6 +38,7 @@ body {
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-body);
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

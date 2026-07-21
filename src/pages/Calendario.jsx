@@ -108,7 +108,7 @@ export default function Calendario() {
       </div>
 
       {mostrarForm && (
-        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-surface p-4 flex flex-col gap-3">
           <input
             required
             placeholder={t('calendario.tituloEvento')}
@@ -152,7 +152,7 @@ export default function Calendario() {
 
       <div className="flex flex-col gap-3">
         {eventos.map((e) => (
-          <div key={e.id} className="border border-ink/10 rounded-lg bg-white p-4">
+          <div key={e.id} className="border border-ink/10 rounded-lg bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-display text-lg font-semibold">{e.titulo}</h3>

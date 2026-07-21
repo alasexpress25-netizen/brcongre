@@ -37,7 +37,7 @@ function CompartirApp() {
         {t('index.compartirAppDescripcion')}
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <code className="flex-1 min-w-0 truncate font-mono text-xs bg-white border border-ink/10 rounded px-2 py-1.5">
+        <code className="flex-1 min-w-0 truncate font-mono text-xs bg-surface border border-ink/10 rounded px-2 py-1.5">
           {url}
         </code>
         <button
@@ -198,7 +198,7 @@ export default function MisAsignaciones() {
 
       <div className="flex flex-col gap-3">
         {items.map((it, i) => (
-          <div key={i} className="border border-ink/10 rounded-lg bg-white p-4">
+          <div key={i} className="border border-ink/10 rounded-lg bg-surface p-4">
             <p className="font-mono text-xs text-gold">{it.tipo}</p>
             <h3 className="font-display text-lg font-semibold mt-0.5">{it.titulo}</h3>
             <p className="text-sm text-ink-soft mt-0.5">

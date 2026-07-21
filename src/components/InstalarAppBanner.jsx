@@ -67,7 +67,7 @@ export default function InstalarAppBanner() {
   }
 
   return (
-    <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-4 sm:w-96 z-50 rounded-lg border border-petrol/20 bg-white shadow-lg px-4 py-3">
+    <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-4 sm:w-96 z-50 rounded-lg border border-petrol/20 bg-surface shadow-lg px-4 py-3">
       <div className="flex items-start gap-3">
         <span className="text-2xl leading-none">📲</span>
         <div className="flex-1 min-w-0">

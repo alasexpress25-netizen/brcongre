@@ -423,7 +423,7 @@ export default function VidaMinisterio() {
             )}
           </div>
 
-          <form onSubmit={crearSemana} className="border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+          <form onSubmit={crearSemana} className="border border-ink/10 rounded-lg bg-surface p-4 flex flex-col gap-3">
           <div className="flex gap-3">
             <input
               required
@@ -478,7 +478,7 @@ export default function VidaMinisterio() {
 
       <div className="flex flex-col gap-8">
         {semanas.map((semana) => (
-          <div key={semana.id} className="border border-ink/10 rounded-lg bg-white overflow-hidden">
+          <div key={semana.id} className="border border-ink/10 rounded-lg bg-surface overflow-hidden">
             <div className="bg-paper-dim px-4 py-3 flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-3">
@@ -496,7 +496,7 @@ export default function VidaMinisterio() {
               </div>
 
               {cabeceraActivaId === semana.id && (
-                <form onSubmit={guardarCabecera} className="border border-ink/10 rounded-lg bg-white p-3 flex flex-wrap gap-2 items-center">
+                <form onSubmit={guardarCabecera} className="border border-ink/10 rounded-lg bg-surface p-3 flex flex-wrap gap-2 items-center">
                   {selectorPersona(t('vidaMinisterio.presidente'), formCabecera.presidente_id, (e) => setFormCabecera({ ...formCabecera, presidente_id: e.target.value }))}
                   {selectorPersona(t('vidaMinisterio.oracionInicial'), formCabecera.oracion_inicial_id, (e) => setFormCabecera({ ...formCabecera, oracion_inicial_id: e.target.value }))}
                   {selectorPersona(t('vidaMinisterio.oracionFinal'), formCabecera.oracion_final_id, (e) => setFormCabecera({ ...formCabecera, oracion_final_id: e.target.value }))}
@@ -677,7 +677,7 @@ function PartesLista({ partes, esEditor, puedeEditarParte, onEditar, onEliminar 
       {partes.map((p) => {
         const mostrarBotones = puedeEditarParte ? puedeEditarParte(p) : esEditor
         return (
-          <div key={p.id} className="border border-ink/10 rounded-lg bg-white p-3 flex items-start justify-between gap-3">
+          <div key={p.id} className="border border-ink/10 rounded-lg bg-surface p-3 flex items-start justify-between gap-3">
             <div>
               <p className="font-medium text-sm">
                 {p.titulo} {p.duracion_min && <span className="text-ink-soft font-normal">({p.duracion_min} min)</span>}

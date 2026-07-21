@@ -170,7 +170,7 @@ export default function ReunionPublica() {
       </div>
 
       {mostrarForm && (
-        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-surface p-4 flex flex-col gap-3">
           <div className="flex gap-3">
             <input required type="date" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })}
               className="flex-1 border border-ink/15 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-petrol" />
@@ -218,7 +218,7 @@ export default function ReunionPublica() {
 
       <div className="flex flex-col gap-4">
         {reuniones.map((r) => (
-          <div key={r.id} className="border border-ink/10 rounded-lg bg-white p-4">
+          <div key={r.id} className="border border-ink/10 rounded-lg bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-display text-lg font-semibold">

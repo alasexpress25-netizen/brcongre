@@ -111,7 +111,7 @@ export default function Limpieza() {
       )}
 
       {mostrarForm && (
-        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-surface p-4 flex flex-col gap-3">
           <select
             required
             value={form.grupo_id}
@@ -168,7 +168,7 @@ export default function Limpieza() {
 
       <div className="flex flex-col gap-3">
         {turnos.map((tu) => (
-          <div key={tu.id} className="border border-ink/10 rounded-lg bg-white p-4">
+          <div key={tu.id} className="border border-ink/10 rounded-lg bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-display text-lg font-semibold">{tu.grupos?.nombre || t('limpieza.grupoSinAsignar')}</h3>

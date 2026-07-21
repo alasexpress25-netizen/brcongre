@@ -95,7 +95,7 @@ export default function PrecursorAuxiliar() {
           </button>
         </div>
       ) : (
-        <form onSubmit={enviar} className="border border-ink/10 rounded-lg bg-white p-5 flex flex-col gap-4">
+        <form onSubmit={enviar} className="border border-ink/10 rounded-lg bg-surface p-5 flex flex-col gap-4">
           <div>
             <label className="block text-sm text-ink-soft mb-1">{t('precursorAuxiliar.nombre')}</label>
             <select

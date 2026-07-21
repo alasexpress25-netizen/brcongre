@@ -201,7 +201,7 @@ export default function Informes() {
               {g.items.map((f) => (
                 <div
                   key={f.publicador_id}
-                  className={`border rounded-lg bg-white p-3.5 flex items-center justify-between gap-3 ${
+                  className={`border rounded-lg bg-surface p-3.5 flex items-center justify-between gap-3 ${
                     f.informado ? 'border-ink/10' : 'border-gold/40'
                   }`}
                 >

@@ -194,7 +194,7 @@ export default function Publicadores() {
       </div>
 
       {mostrarForm && (
-        <form onSubmit={guardar} className="no-print mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <form onSubmit={guardar} className="no-print mb-6 border border-ink/10 rounded-lg bg-surface p-4 flex flex-col gap-3">
           {error && <p className="text-sm text-clay">{error}</p>}
           <input
             required
@@ -321,7 +321,7 @@ export default function Publicadores() {
             </h2>
             <div className="flex flex-col gap-3">
               {g.items.map((p) => (
-                <div key={p.id} className={`border rounded-lg bg-white p-4 ${p.activo ? 'border-ink/10' : 'border-ink/10 opacity-60'}`}>
+                <div key={p.id} className={`border rounded-lg bg-surface p-4 ${p.activo ? 'border-ink/10' : 'border-ink/10 opacity-60'}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-display font-semibold">

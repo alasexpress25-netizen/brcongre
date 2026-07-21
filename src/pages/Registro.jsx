@@ -49,7 +49,7 @@ export default function Registro() {
             placeholder={t('registro.nombreYApellido')}
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            className="border border-ink/15 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-petrol"
+            className="border border-ink/15 rounded-md px-3 py-2 bg-surface focus:outline-none focus:ring-2 focus:ring-petrol"
           />
           <input
             type="email"
@@ -57,7 +57,7 @@ export default function Registro() {
             placeholder={t('registro.correo')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border border-ink/15 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-petrol"
+            className="border border-ink/15 rounded-md px-3 py-2 bg-surface focus:outline-none focus:ring-2 focus:ring-petrol"
           />
           <input
             type="password"
@@ -66,7 +66,7 @@ export default function Registro() {
             placeholder={t('registro.contrasena')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border border-ink/15 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-petrol"
+            className="border border-ink/15 rounded-md px-3 py-2 bg-surface focus:outline-none focus:ring-2 focus:ring-petrol"
           />
           {error && <p className="text-sm text-clay">{error}</p>}
           <button

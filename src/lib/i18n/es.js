@@ -491,4 +491,8 @@ export const es = {
     es: 'Español',
     pt: 'Português',
   },
+  tema: {
+    activarOscuro: 'Modo oscuro',
+    activarClaro: 'Modo claro',
+  },
 }

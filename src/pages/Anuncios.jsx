@@ -84,7 +84,7 @@ export default function Anuncios() {
       </div>
 
       {mostrarForm && (
-        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <form onSubmit={guardar} className="mb-6 border border-ink/10 rounded-lg bg-surface p-4 flex flex-col gap-3">
           <input
             required
             placeholder={t('anuncios.tituloCampo')}
@@ -137,7 +137,7 @@ export default function Anuncios() {
 
       <div className="flex flex-col gap-3">
         {anuncios.map((a) => (
-          <div key={a.id} className="border border-ink/10 rounded-lg bg-white p-4">
+          <div key={a.id} className="border border-ink/10 rounded-lg bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <h3 className="font-display text-lg font-semibold">{a.titulo}</h3>
               {esEditor && (

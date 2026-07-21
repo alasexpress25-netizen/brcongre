@@ -71,7 +71,7 @@ export default function Configuracion() {
       {cargando && <p className="text-ink-soft text-sm">{t('comun.cargando')}</p>}
 
       {!cargando && (
-        <form onSubmit={guardar} className="border border-ink/10 rounded-lg bg-white p-4 flex flex-col gap-3">
+        <form onSubmit={guardar} className="border border-ink/10 rounded-lg bg-surface p-4 flex flex-col gap-3">
           <div>
             <label className="text-xs text-ink-soft font-mono block mb-1">{t('configuracion.nombreCongregacion')}</label>
             <input
