@@ -10,6 +10,15 @@ const base = {
   strokeLinejoin: 'round',
 }
 
+export function IconHome(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m4 11.3 8-6.6 8 6.6" />
+      <path d="M6 9.8V19a1 1 0 0 0 1 1h3.3v-4.8c0-.6.5-1 1-1h1.4c.6 0 1 .4 1 1V20H17a1 1 0 0 0 1-1V9.8" />
+    </svg>
+  )
+}
+
 export function IconVidaMinisterio(props) {
   return (
     <svg {...base} {...props}>

@@ -4,16 +4,18 @@ import { useAuth } from '../lib/AuthContext'
 import { useConfig } from '../lib/useConfig'
 import { useI18n } from '../lib/i18n/I18nContext'
 import { getIdentidad, limpiarIdentidad } from '../lib/identidad'
+import { useSemana } from '../lib/SemanaContext'
+import { formatearRango } from '../lib/semanas'
 import AjusteFuente from './AjusteFuente'
 import logoLaVisual from '../assets/logo-lavisual.png'
 import {
+  IconHome,
   IconVidaMinisterio,
   IconReunionPublica,
   IconPredicacion,
   IconAnuncios,
   IconCalendario,
   IconLimpieza,
-  IconMisAsignaciones,
   IconInforme,
   IconPrecursorAuxiliar,
   IconEntrar,
@@ -48,7 +50,8 @@ function SelectorIdioma() {
 export default function Layout({ children }) {
   const { config } = useConfig()
   const { session, perfil, cerrarSesion, esAdmin, puedeEditar } = useAuth()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const semana = useSemana()
   const puedeGestionarPublicadores = puedeEditar('secretario')
   const [menuAbierto, setMenuAbierto] = useState(false)
   const identidad = getIdentidad()
@@ -56,13 +59,13 @@ export default function Layout({ children }) {
   const nombreMostrado = perfil?.nombre || identidad?.nombre || ''
 
   const NAV_ITEMS = [
+    { to: '/', label: t('layout.home'), Icon: IconHome, end: true },
     { to: '/vida-ministerio', label: t('nav.vidaMinisterio'), Icon: IconVidaMinisterio },
     { to: '/reunion-publica', label: t('nav.reunionPublica'), Icon: IconReunionPublica },
     { to: '/predicacion', label: t('nav.predicacion'), Icon: IconPredicacion },
     { to: '/anuncios', label: t('nav.anuncios'), Icon: IconAnuncios },
     { to: '/calendario', label: t('nav.calendario'), Icon: IconCalendario },
     { to: '/limpieza', label: t('nav.limpieza'), Icon: IconLimpieza },
-    { to: '/mis-asignaciones', label: t('nav.misAsignaciones'), Icon: IconMisAsignaciones },
     { to: '/informe-predicacion', label: t('nav.informe'), Icon: IconInforme },
     { to: '/precursor-auxiliar', label: t('nav.solicitudPrecursorAuxiliar'), Icon: IconPrecursorAuxiliar },
   ]
@@ -72,12 +75,17 @@ export default function Layout({ children }) {
     puedeGestionarPublicadores && { to: '/informes', label: t('layout.informes') },
     esAdmin && { to: '/configuracion', label: t('layout.datosCongregacion') },
     esAdmin && { to: '/admin', label: t('layout.admin') },
-    { to: '/mi-cuenta', label: t('layout.miCuenta') },
   ].filter(Boolean)
 
   function cambiarIdentidad() {
     limpiarIdentidad()
     window.location.reload()
+  }
+
+  function confirmarCambiarIdentidad() {
+    if (window.confirm(t('layout.confirmarNoSoyYo'))) {
+      cambiarIdentidad()
+    }
   }
 
   function cerrarMenu() {
@@ -90,10 +98,10 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* ===== Barra superior ===== */}
-      <header className="fixed top-0 inset-x-0 z-40 h-16 bg-petrol text-paper border-b border-paper/10">
+      <header className="fixed top-0 inset-x-0 z-40 h-20 bg-petrol text-paper border-b border-paper/10">
         <div className="h-full grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:px-5">
-          {/* Izquierda: botón menú (mobile) + "no soy yo" */}
-          <div className="flex items-center gap-2 min-w-0">
+          {/* Izquierda: botón menú (mobile) ...espacio... "no soy yo" */}
+          <div className="flex items-center justify-between gap-2 min-w-0">
             <button
               onClick={() => setMenuAbierto((v) => !v)}
               aria-label={menuAbierto ? t('layout.cerrarMenu') : t('layout.abrirMenu')}
@@ -107,7 +115,7 @@ export default function Layout({ children }) {
 
             {!session && identidad?.nombre && (
               <button
-                onClick={cambiarIdentidad}
+                onClick={confirmarCambiarIdentidad}
                 className="flex items-center gap-1.5 text-paper/75 hover:text-gold-soft transition-colors text-xs sm:text-sm font-mono truncate"
               >
                 <IconCambiarIdentidad className="w-4 h-4 shrink-0" />
@@ -116,13 +124,44 @@ export default function Layout({ children }) {
             )}
           </div>
 
-          {/* Centro: "Semana" grande */}
-          <Link
-            to="/"
-            className="font-display text-xl sm:text-2xl font-semibold tracking-wide text-paper hover:text-gold-soft transition-colors whitespace-nowrap"
-          >
-            {t('index.semana')}
-          </Link>
+          {/* Centro: selector real de semana */}
+          <div className="flex flex-col items-center leading-none">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                onClick={semana.semanaAnterior}
+                aria-label={t('index.semanaAnterior')}
+                className="text-gold-soft/80 hover:text-gold-soft transition-colors font-mono text-lg sm:text-xl px-1"
+              >
+                ‹
+              </button>
+              <Link
+                to="/"
+                className="font-display text-lg sm:text-2xl font-semibold tracking-wide text-paper hover:text-gold-soft transition-colors whitespace-nowrap text-center"
+              >
+                {t('index.semana')}
+              </Link>
+              <button
+                onClick={semana.semanaSiguiente}
+                aria-label={t('index.semanaSiguiente')}
+                className="text-gold-soft/80 hover:text-gold-soft transition-colors font-mono text-lg sm:text-xl px-1"
+              >
+                ›
+              </button>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="font-mono text-[10px] sm:text-[11px] text-paper/60 whitespace-nowrap">
+                {formatearRango(semana.lunes, semana.domingo, locale())}
+              </span>
+              {!semana.esSemanaActual && (
+                <button
+                  onClick={semana.irEstaSemana}
+                  className="font-mono text-[10px] sm:text-[11px] text-gold-soft underline decoration-gold-soft/50 hover:text-paper transition-colors whitespace-nowrap"
+                >
+                  {t('index.volverAEstaSemana')}
+                </button>
+              )}
+            </div>
+          </div>
 
           {/* Derecha: idioma + entrar/salir */}
           <div className="flex items-center justify-end gap-2 sm:gap-3 min-w-0">
@@ -174,7 +213,7 @@ export default function Layout({ children }) {
 
       {/* ===== Menú lateral ===== */}
       <aside
-        className={`fixed top-16 bottom-0 left-0 z-30 w-64 bg-petrol-dark text-paper flex flex-col
+        className={`fixed top-20 bottom-0 left-0 z-30 w-64 bg-petrol-dark text-paper flex flex-col
           transition-transform duration-200 ease-out
           ${menuAbierto ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
@@ -188,10 +227,11 @@ export default function Layout({ children }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2.5 py-3 flex flex-col gap-0.5">
-          {NAV_ITEMS.map(({ to, label, Icon }) => (
+          {NAV_ITEMS.map(({ to, label, Icon, end }) => (
             <NavLink
               key={to}
               to={to}
+              end={end}
               onClick={cerrarMenu}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-mono transition-colors ${
@@ -232,7 +272,7 @@ export default function Layout({ children }) {
       </aside>
 
       {/* ===== Contenido ===== */}
-      <main className="flex-1 w-full pt-16 md:pl-64">
+      <main className="flex-1 w-full pt-20 md:pl-64">
         <div className="max-w-4xl mx-auto px-5 py-8">{children}</div>
       </main>
 

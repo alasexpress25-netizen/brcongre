@@ -90,6 +90,8 @@ export const es = {
     vidaMinisterioCorta: 'Vida y Ministerio',
     noSoyYo: 'No soy yo',
     entrar: 'Entrar',
+    confirmarNoSoyYo: '¿Confirmás que no sos vos? Vas a tener que identificarte de nuevo para ver tus asignaciones.',
+    home: 'Home',
   },
   footer: {
     disenadoPor: 'Diseñado y creado por La Visual Mk',

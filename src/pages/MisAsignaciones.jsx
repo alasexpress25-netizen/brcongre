@@ -14,8 +14,53 @@ const CLAVES_TAREAS = [
   'acomodador_audio_inicio_id', 'acomodador_audio_final_id',
 ]
 
+function CompartirApp() {
+  const { t } = useI18n()
+  const [copiado, setCopiado] = useState(false)
+  const url = window.location.origin
+  const mensaje = t('index.mensajeWhatsapp', { url })
+
+  async function copiarLink() {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    } catch {
+      // Si falla el clipboard (ej. sin permisos), no rompemos nada.
+    }
+  }
+
+  return (
+    <div className="mb-6 rounded-lg border border-petrol/20 bg-petrol/5 px-4 py-3">
+      <p className="text-sm font-medium mb-2">{t('index.compartirApp')}</p>
+      <p className="text-xs text-ink-soft mb-3">
+        {t('index.compartirAppDescripcion')}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <code className="flex-1 min-w-0 truncate font-mono text-xs bg-white border border-ink/10 rounded px-2 py-1.5">
+          {url}
+        </code>
+        <button
+          onClick={copiarLink}
+          className="font-mono text-xs border border-petrol/30 text-petrol rounded px-2.5 py-1.5 hover:bg-petrol/10 transition-colors shrink-0"
+        >
+          {copiado ? t('index.copiado') : t('index.copiar')}
+        </button>
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 font-mono text-xs bg-[#25D366] text-white rounded px-2.5 py-1.5 hover:opacity-90 transition-opacity shrink-0"
+        >
+          WhatsApp
+        </a>
+      </div>
+    </div>
+  )
+}
+
 export default function MisAsignaciones() {
-  const { session, perfil } = useAuth()
+  const { session, perfil, puedeEditar } = useAuth()
   const { t, locale } = useI18n()
   const identidad = getIdentidad()
   const email = session?.user?.email || identidad?.email
@@ -146,6 +191,8 @@ export default function MisAsignaciones() {
 
   return (
     <Layout>
+      {puedeEditar('secretario') && <CompartirApp />}
+
       <h1 className="font-display text-2xl font-semibold mb-1">{t('misAsignaciones.titulo')}</h1>
       <p className="text-sm text-ink-soft mb-6">{t('misAsignaciones.hola')}{nombreMostrar ? `, ${nombreMostrar}` : ''}. {t('misAsignaciones.proximoACargo')}</p>
 
