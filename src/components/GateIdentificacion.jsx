@@ -69,7 +69,7 @@ export default function GateIdentificacion({ children }) {
           <button
             type="submit"
             disabled={estado === 'buscando'}
-            className="bg-petrol text-paper rounded-md py-2 font-medium hover:bg-petrol-dark transition-colors disabled:opacity-50"
+            className="bg-petrol text-crema rounded-md py-2 font-medium hover:bg-petrol-dark transition-colors disabled:opacity-50"
           >
             {estado === 'buscando' ? t('gate.buscando') : t('gate.continuar')}
           </button>

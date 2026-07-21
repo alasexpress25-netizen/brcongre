@@ -30,7 +30,7 @@ export default function Registro() {
         <div className="max-w-sm mx-auto text-center">
           <h1 className="font-display text-2xl font-semibold mb-2">{t('registro.cuentaCreadaTitulo')}</h1>
           <p className="text-sm text-ink-soft mb-6">{t('registro.cuentaCreadaTexto')}</p>
-          <button onClick={() => navigate('/login')} className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">
+          <button onClick={() => navigate('/login')} className="bg-petrol text-crema rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">
             {t('registro.irAIniciarSesion')}
           </button>
         </div>
@@ -72,7 +72,7 @@ export default function Registro() {
           <button
             type="submit"
             disabled={enviando}
-            className="bg-petrol text-paper rounded-md py-2 font-medium hover:bg-petrol-dark transition-colors disabled:opacity-50"
+            className="bg-petrol text-crema rounded-md py-2 font-medium hover:bg-petrol-dark transition-colors disabled:opacity-50"
           >
             {enviando ? t('registro.creando') : t('registro.crearCuenta')}
           </button>

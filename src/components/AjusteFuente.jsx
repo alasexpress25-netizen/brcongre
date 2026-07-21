@@ -42,7 +42,7 @@ export default function AjusteFuente() {
       <button
         onClick={() => setAbierto((v) => !v)}
         aria-label={t('ajusteFuente.ajustarTamanoLetra')}
-        className="w-11 h-11 rounded-full bg-petrol text-paper shadow-lg flex items-center justify-center font-display text-lg"
+        className="w-11 h-11 rounded-full bg-petrol text-crema shadow-lg flex items-center justify-center font-display text-lg"
       >
         A
       </button>

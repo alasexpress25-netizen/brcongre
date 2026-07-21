@@ -182,7 +182,7 @@ export default function PrecursorAuxiliar() {
           <button
             type="submit"
             disabled={enviando}
-            className="bg-petrol text-paper rounded-md px-4 py-2.5 text-sm font-medium hover:bg-petrol-dark transition-colors disabled:opacity-60"
+            className="bg-petrol text-crema rounded-md px-4 py-2.5 text-sm font-medium hover:bg-petrol-dark transition-colors disabled:opacity-60"
           >
             {enviando ? t('precursorAuxiliar.enviando') : t('precursorAuxiliar.enviar')}
           </button>

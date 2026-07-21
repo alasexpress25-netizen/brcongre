@@ -192,7 +192,7 @@ export default function InformePredicacion() {
           <button
             type="submit"
             disabled={enviando}
-            className="bg-petrol text-paper rounded-md px-4 py-2.5 text-sm font-medium hover:bg-petrol-dark transition-colors disabled:opacity-60"
+            className="bg-petrol text-crema rounded-md px-4 py-2.5 text-sm font-medium hover:bg-petrol-dark transition-colors disabled:opacity-60"
           >
             {enviando ? t('informePredicacion.enviando') : t('informePredicacion.enviar')}
           </button>

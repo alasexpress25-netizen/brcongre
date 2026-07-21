@@ -229,7 +229,7 @@ export default function Admin() {
           />
           <button
             disabled={creandoCuenta}
-            className="bg-petrol text-paper text-sm rounded-md px-3 py-1.5 hover:bg-petrol-dark disabled:opacity-50 shrink-0"
+            className="bg-petrol text-crema text-sm rounded-md px-3 py-1.5 hover:bg-petrol-dark disabled:opacity-50 shrink-0"
           >
             {creandoCuenta ? t('admin.creando') : t('admin.crearCuenta')}
           </button>
@@ -287,7 +287,7 @@ export default function Admin() {
               <button
                 onClick={() => guardar(u)}
                 disabled={guardandoId === u.id}
-                className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark disabled:opacity-50"
+                className="font-mono text-xs bg-petrol text-crema px-3 py-1.5 rounded-md hover:bg-petrol-dark disabled:opacity-50"
               >
                 {guardandoId === u.id ? t('admin.guardando') : t('admin.guardarCambios')}
               </button>

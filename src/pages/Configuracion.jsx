@@ -140,7 +140,7 @@ export default function Configuracion() {
           <div className="flex items-center gap-3">
             <button
               disabled={guardando}
-              className="font-mono text-xs bg-petrol text-paper px-4 py-2 rounded-md hover:bg-petrol-dark disabled:opacity-50 self-start"
+              className="font-mono text-xs bg-petrol text-crema px-4 py-2 rounded-md hover:bg-petrol-dark disabled:opacity-50 self-start"
             >
               {guardando ? t('configuracion.guardando') : t('comun.guardar')}
             </button>

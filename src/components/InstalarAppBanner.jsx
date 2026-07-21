@@ -81,7 +81,7 @@ export default function InstalarAppBanner() {
             {!mostrarIOS && (
               <button
                 onClick={instalar}
-                className="font-mono text-xs bg-petrol text-paper rounded px-3 py-1.5 hover:opacity-90 transition-opacity"
+                className="font-mono text-xs bg-petrol text-crema rounded px-3 py-1.5 hover:opacity-90 transition-opacity"
               >
                 {t('instalarApp.instalar')}
               </button>

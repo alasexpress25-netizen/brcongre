@@ -52,7 +52,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={enviando}
-            className="bg-petrol text-paper rounded-md py-2 font-medium hover:bg-petrol-dark transition-colors disabled:opacity-50"
+            className="bg-petrol text-crema rounded-md py-2 font-medium hover:bg-petrol-dark transition-colors disabled:opacity-50"
           >
             {enviando ? t('login.entrando') : t('login.entrar')}
           </button>

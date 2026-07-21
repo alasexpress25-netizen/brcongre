@@ -177,7 +177,7 @@ export default function Publicadores() {
           <button onClick={imprimir} className="font-mono text-xs border border-petrol/30 text-petrol px-3 py-1.5 rounded-md hover:bg-petrol/10 transition-colors">
             {t('publicadores.imprimir')}
           </button>
-          <button onClick={nuevo} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
+          <button onClick={nuevo} className="font-mono text-xs bg-petrol text-crema px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
             {t('comun.nuevo')}
           </button>
         </div>
@@ -271,7 +271,7 @@ export default function Publicadores() {
             rows={2}
           />
           <div className="flex gap-2">
-            <button type="submit" disabled={guardando} className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors disabled:opacity-50">
+            <button type="submit" disabled={guardando} className="bg-petrol text-crema rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors disabled:opacity-50">
               {guardando ? t('publicadores.guardando') : t('comun.guardar')}
             </button>
             <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">

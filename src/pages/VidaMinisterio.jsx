@@ -383,7 +383,7 @@ export default function VidaMinisterio() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl font-semibold">{t('vidaMinisterio.titulo')}</h1>
         {(esEditorEscuela || esEditorOraciones) && (
-          <button onClick={() => { setFormSemana((f) => ({ ...f, fecha_inicio: f.fecha_inicio || semana.lunesISO })); setMostrarFormSemana(true) }} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark">
+          <button onClick={() => { setFormSemana((f) => ({ ...f, fecha_inicio: f.fecha_inicio || semana.lunesISO })); setMostrarFormSemana(true) }} className="font-mono text-xs bg-petrol text-crema px-3 py-1.5 rounded-md hover:bg-petrol-dark">
             {t('vidaMinisterio.crearSemana')}
           </button>
         )}
@@ -467,7 +467,7 @@ export default function VidaMinisterio() {
             </>
           )}
           <div className="flex gap-2">
-            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">{t('vidaMinisterio.crearSemanaBoton')}</button>
+            <button type="submit" className="bg-petrol text-crema rounded-md px-4 py-2 text-sm hover:bg-petrol-dark">{t('vidaMinisterio.crearSemanaBoton')}</button>
             <button type="button" onClick={() => { setMostrarFormSemana(false); setPartesDetectadas([]) }} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">{t('comun.cancelar')}</button>
           </div>
           </form>
@@ -501,7 +501,7 @@ export default function VidaMinisterio() {
                   {selectorPersona(t('vidaMinisterio.oracionInicial'), formCabecera.oracion_inicial_id, (e) => setFormCabecera({ ...formCabecera, oracion_inicial_id: e.target.value }))}
                   {selectorPersona(t('vidaMinisterio.oracionFinal'), formCabecera.oracion_final_id, (e) => setFormCabecera({ ...formCabecera, oracion_final_id: e.target.value }))}
                   <div className="flex gap-2">
-                    <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
+                    <button type="submit" className="bg-petrol text-crema rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
                     <button type="button" onClick={() => setCabeceraActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">{t('comun.cancelar')}</button>
                   </div>
                 </form>
@@ -565,7 +565,7 @@ export default function VidaMinisterio() {
                           {selectorPersona(t('vidaMinisterio.ayudante'), formParte.ayudante_id, (e) => setFormParte({ ...formParte, ayudante_id: e.target.value }))}
                         </div>
                         <div className="flex gap-2">
-                          <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
+                          <button type="submit" className="bg-petrol text-crema rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
                           <button type="button" onClick={() => setSemanaActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">{t('comun.cancelar')}</button>
                         </div>
                       </form>
@@ -639,7 +639,7 @@ export default function VidaMinisterio() {
                       </div>
                     ))}
                     <div className="col-span-2 sm:col-span-3 flex gap-2 mt-2">
-                      <button type="submit" className="bg-petrol text-paper rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
+                      <button type="submit" className="bg-petrol text-crema rounded-md px-3 py-1.5 text-xs hover:bg-petrol-dark">{t('comun.guardar')}</button>
                       <button type="button" onClick={() => setSemanaTareasActivaId(null)} className="text-ink-soft text-xs px-3 py-1.5 hover:text-ink">{t('comun.cancelar')}</button>
                     </div>
                   </form>

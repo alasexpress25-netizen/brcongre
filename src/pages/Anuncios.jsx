@@ -76,7 +76,7 @@ export default function Anuncios() {
         {esEditor && (
           <button
             onClick={nuevo}
-            className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors"
+            className="font-mono text-xs bg-petrol text-crema px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors"
           >
             {t('comun.nuevo')}
           </button>
@@ -116,7 +116,7 @@ export default function Anuncios() {
             />
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
+            <button type="submit" className="bg-petrol text-crema rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
               {t('comun.guardar')}
             </button>
             <button

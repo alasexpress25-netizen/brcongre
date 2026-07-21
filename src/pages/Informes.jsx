@@ -156,7 +156,7 @@ export default function Informes() {
               key={f.key}
               onClick={() => setFiltro(f.key)}
               className={`px-2.5 py-1.5 rounded-md border ${
-                filtro === f.key ? 'bg-petrol text-paper border-petrol' : 'border-ink/15 text-ink-soft hover:border-petrol/40'
+                filtro === f.key ? 'bg-petrol text-crema border-petrol' : 'border-ink/15 text-ink-soft hover:border-petrol/40'
               }`}
             >
               {f.label}
@@ -174,7 +174,7 @@ export default function Informes() {
           <button
             onClick={enviarRecordatorios}
             disabled={enviando || pendientesConEmail === 0}
-            className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark disabled:opacity-50 shrink-0"
+            className="font-mono text-xs bg-petrol text-crema px-3 py-1.5 rounded-md hover:bg-petrol-dark disabled:opacity-50 shrink-0"
           >
             {enviando ? t('informes.enviando') : `${t('informes.enviarRecordatorio')} (${pendientesConEmail})`}
           </button>

@@ -133,7 +133,7 @@ export default function MiCuenta() {
             <button
               type="submit"
               disabled={guardando}
-              className="bg-petrol text-paper rounded-md py-2 font-medium hover:bg-petrol-dark transition-colors disabled:opacity-50"
+              className="bg-petrol text-crema rounded-md py-2 font-medium hover:bg-petrol-dark transition-colors disabled:opacity-50"
             >
               {guardando ? t('miCuenta.guardando') : t('miCuenta.guardarContrasena')}
             </button>

@@ -100,7 +100,7 @@ export default function Limpieza() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl font-semibold">{t('limpieza.titulo')}</h1>
         {esEditor && (
-          <button onClick={nuevo} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
+          <button onClick={nuevo} className="font-mono text-xs bg-petrol text-crema px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
             {t('comun.nuevo')}
           </button>
         )}
@@ -153,7 +153,7 @@ export default function Limpieza() {
             rows={2}
           />
           <div className="flex gap-2">
-            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
+            <button type="submit" className="bg-petrol text-crema rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
               {t('comun.guardar')}
             </button>
             <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">

@@ -115,11 +115,11 @@ export default function PantallaInstalacion({ children }) {
           alt=""
           className="w-20 h-20 rounded-2xl mx-auto mb-5 shadow-lg"
         />
-        <h1 className="font-display text-2xl font-semibold text-paper mb-2">{nombreApp}</h1>
+        <h1 className="font-display text-2xl font-semibold text-crema mb-2">{nombreApp}</h1>
 
         {paso === 'inicio' && (
           <>
-            <p className="text-paper/70 text-sm mb-6">{t('instalarApp.bienvenidaSubtitulo')}</p>
+            <p className="text-crema/70 text-sm mb-6">{t('instalarApp.bienvenidaSubtitulo')}</p>
             <button
               onClick={instalar}
               className="w-full bg-gold text-ink font-medium rounded-md py-3 hover:bg-gold-dark transition-colors mb-3"
@@ -128,7 +128,7 @@ export default function PantallaInstalacion({ children }) {
             </button>
             <button
               onClick={continuarSinInstalar}
-              className="w-full text-paper/60 text-sm py-2 hover:text-paper transition-colors"
+              className="w-full text-crema/60 text-sm py-2 hover:text-crema transition-colors"
             >
               {t('instalarApp.continuarNavegador')}
             </button>
@@ -136,13 +136,13 @@ export default function PantallaInstalacion({ children }) {
         )}
 
         {paso === 'instalando' && (
-          <p className="text-paper/70 text-sm">{t('instalarApp.instalando')}</p>
+          <p className="text-crema/70 text-sm">{t('instalarApp.instalando')}</p>
         )}
 
         {paso === 'instalada' && (
           <>
-            <p className="text-paper text-sm mb-1">{t('instalarApp.instalada')}</p>
-            <p className="text-paper/60 text-xs mb-6">{t('instalarApp.abrirAppAyuda')}</p>
+            <p className="text-crema text-sm mb-1">{t('instalarApp.instalada')}</p>
+            <p className="text-crema/60 text-xs mb-6">{t('instalarApp.abrirAppAyuda')}</p>
             <button
               onClick={abrirApp}
               className="w-full bg-gold text-ink font-medium rounded-md py-3 hover:bg-gold-dark transition-colors"
@@ -154,8 +154,8 @@ export default function PantallaInstalacion({ children }) {
 
         {paso === 'ios' && (
           <>
-            <p className="text-paper/70 text-sm mb-5">{t('instalarApp.bienvenidaSubtitulo')}</p>
-            <ol className="text-left text-paper/80 text-sm flex flex-col gap-2 mb-6 bg-paper/10 rounded-lg p-4">
+            <p className="text-crema/70 text-sm mb-5">{t('instalarApp.bienvenidaSubtitulo')}</p>
+            <ol className="text-left text-crema/80 text-sm flex flex-col gap-2 mb-6 bg-crema/10 rounded-lg p-4">
               <li>1. {t('instalarApp.iosPaso1')} <span className="inline-block">⬆️</span></li>
               <li>2. {t('instalarApp.iosPaso2')}</li>
               <li>3. {t('instalarApp.iosPaso3')}</li>
@@ -168,7 +168,7 @@ export default function PantallaInstalacion({ children }) {
             </button>
             <button
               onClick={continuarSinInstalar}
-              className="w-full text-paper/60 text-sm py-2 hover:text-paper transition-colors"
+              className="w-full text-crema/60 text-sm py-2 hover:text-crema transition-colors"
             >
               {t('instalarApp.continuarNavegador')}
             </button>
@@ -177,7 +177,7 @@ export default function PantallaInstalacion({ children }) {
 
         {paso === 'no_disponible' && (
           <>
-            <p className="text-paper/70 text-sm mb-6">{t('instalarApp.noDisponible')}</p>
+            <p className="text-crema/70 text-sm mb-6">{t('instalarApp.noDisponible')}</p>
             <button
               onClick={continuarSinInstalar}
               className="w-full bg-gold text-ink font-medium rounded-md py-3 hover:bg-gold-dark transition-colors"

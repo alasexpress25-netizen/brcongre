@@ -165,7 +165,7 @@ export default function Predicacion() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl font-semibold">{t('predicacion.titulo')}</h1>
         {esEditor && (
-          <button onClick={nueva} className="font-mono text-xs bg-petrol text-paper px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
+          <button onClick={nueva} className="font-mono text-xs bg-petrol text-crema px-3 py-1.5 rounded-md hover:bg-petrol-dark transition-colors">
             {t('predicacion.nuevaSalida')}
           </button>
         )}
@@ -186,7 +186,7 @@ export default function Predicacion() {
               onChange={(e) => setNuevoGrupo(e.target.value)}
               className="flex-1 border border-ink/15 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-petrol"
             />
-            <button className="bg-petrol text-paper text-sm rounded-md px-3 hover:bg-petrol-dark">{t('predicacion.agregar')}</button>
+            <button className="bg-petrol text-crema text-sm rounded-md px-3 hover:bg-petrol-dark">{t('predicacion.agregar')}</button>
           </form>
         </details>
       )}
@@ -255,7 +255,7 @@ export default function Predicacion() {
                     onClick={() => alternarTerritorio(te.id)}
                     className={`font-mono text-xs rounded-full px-3 py-1 border transition-colors ${
                       seleccionado
-                        ? 'bg-petrol text-paper border-petrol'
+                        ? 'bg-petrol text-crema border-petrol'
                         : 'bg-paper-dim text-ink-soft border-ink/15 hover:border-petrol/50'
                     }`}
                   >
@@ -266,7 +266,7 @@ export default function Predicacion() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="bg-petrol text-paper rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
+            <button type="submit" className="bg-petrol text-crema rounded-md px-4 py-2 text-sm hover:bg-petrol-dark transition-colors">
               {t('comun.guardar')}
             </button>
             <button type="button" onClick={() => setMostrarForm(false)} className="text-ink-soft text-sm px-4 py-2 hover:text-ink">
