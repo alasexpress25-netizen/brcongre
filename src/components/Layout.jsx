@@ -55,6 +55,17 @@ export default function Layout({ children }) {
   const puedeGestionarPublicadores = puedeEditar('secretario')
   const [menuAbierto, setMenuAbierto] = useState(false)
   const identidad = getIdentidad()
+  const navRef = useRef(null)
+
+  // Layout se monta de nuevo en cada navegación (cada página envuelve su
+  // contenido en <Layout>), así que el <nav> siempre arranca con scroll en 0.
+  // Si el ítem activo queda fuera de vista, lo traemos a la vista al montar.
+  useEffect(() => {
+    const activo = navRef.current?.querySelector('[aria-current="page"]')
+    if (activo) {
+      activo.scrollIntoView({ block: 'nearest' })
+    }
+  }, [])
 
   const nombreMostrado = perfil?.nombre || identidad?.nombre || ''
 
@@ -226,7 +237,7 @@ export default function Layout({ children }) {
           </p>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2.5 py-3 flex flex-col gap-0.5">
+        <nav ref={navRef} className="flex-1 overflow-y-auto px-2.5 py-3 flex flex-col gap-0.5">
           {NAV_ITEMS.map(({ to, label, Icon, end }) => (
             <NavLink
               key={to}
