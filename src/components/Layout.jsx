@@ -129,137 +129,64 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* ===== Barra superior ===== */}
-      <header className="fixed top-0 inset-x-0 z-40 bg-petrol text-crema border-b border-crema/10">
-        {/* --- Mobile: 2 filas (menú + íconos arriba, semana abajo) --- */}
-        <div className="md:hidden flex flex-col">
-          <div className="h-14 flex items-center justify-between gap-2 px-3">
+      <header className="fixed top-0 inset-x-0 z-40 h-20 bg-petrol text-crema border-b border-crema/10">
+        <div className="h-full grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:px-5">
+          {/* Izquierda: botón menú (mobile) ...espacio... "no soy yo" */}
+          <div className="flex items-center justify-between gap-2 min-w-0">
             <button
               onClick={() => setMenuAbierto((v) => !v)}
               aria-label={menuAbierto ? t('layout.cerrarMenu') : t('layout.abrirMenu')}
               aria-expanded={menuAbierto}
-              className="shrink-0 w-9 h-9 flex flex-col items-center justify-center gap-[3px] rounded-md hover:bg-crema/10 transition-colors"
+              className="md:hidden shrink-0 w-9 h-9 flex flex-col items-center justify-center gap-[3px] rounded-md hover:bg-crema/10 transition-colors"
             >
               <span className={`block h-[1.5px] w-5 bg-crema transition-transform ${menuAbierto ? 'translate-y-[5.5px] rotate-45' : ''}`} />
               <span className={`block h-[1.5px] w-5 bg-crema transition-opacity ${menuAbierto ? 'opacity-0' : ''}`} />
               <span className={`block h-[1.5px] w-5 bg-crema transition-transform ${menuAbierto ? '-translate-y-[5.5px] -rotate-45' : ''}`} />
             </button>
 
-            <div className="flex items-center gap-2 min-w-0 justify-end">
-              {!session && identidad?.nombre && (
-                <button
-                  onClick={confirmarCambiarIdentidad}
-                  className="flex items-center gap-1.5 text-crema/75 hover:text-gold-soft transition-colors text-xs font-mono truncate"
-                >
-                  <IconCambiarIdentidad className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline truncate">{t('layout.noSoyYo')}</span>
-                </button>
-              )}
-              <SelectorIdioma />
-              <BotonTema />
-              {session ? (
-                <button
-                  onClick={cerrarSesion}
-                  className="flex items-center gap-1.5 text-crema/85 hover:text-gold-soft transition-colors text-xs font-mono shrink-0"
-                >
-                  <span className="hidden sm:inline">{t('layout.salir')}</span>
-                  <IconEntrar className="w-4 h-4 shrink-0 rotate-180" />
-                </button>
-              ) : (
-                <Link
-                  to="/login"
-                  className="flex items-center gap-1.5 text-crema/85 hover:text-gold-soft transition-colors text-xs font-mono shrink-0"
-                >
-                  <span className="hidden sm:inline">{t('layout.entrar')}</span>
-                  <IconEntrar className="w-4 h-4 shrink-0" />
-                </Link>
-              )}
-            </div>
-          </div>
-
-          <div className="h-14 flex flex-col items-center justify-center leading-none pb-1">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={semana.semanaAnterior}
-                aria-label={t('index.semanaAnterior')}
-                className="text-gold-soft/80 hover:text-gold-soft transition-colors font-mono text-lg px-1"
-              >
-                ‹
-              </button>
-              <Link
-                to="/"
-                className="font-display text-lg font-semibold tracking-wide text-crema hover:text-gold-soft transition-colors whitespace-nowrap text-center"
-              >
-                {t('index.semana')}
-              </Link>
-              <button
-                onClick={semana.semanaSiguiente}
-                aria-label={t('index.semanaSiguiente')}
-                className="text-gold-soft/80 hover:text-gold-soft transition-colors font-mono text-lg px-1"
-              >
-                ›
-              </button>
-            </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-mono text-[10px] text-crema/60 whitespace-nowrap">
-                {formatearRango(semana.lunes, semana.domingo, locale())}
-              </span>
-              {!semana.esSemanaActual && (
-                <button
-                  onClick={semana.irEstaSemana}
-                  className="font-mono text-[10px] text-gold-soft underline decoration-gold-soft/50 hover:text-crema transition-colors whitespace-nowrap"
-                >
-                  {t('index.volverAEstaSemana')}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* --- Desktop: fila única original --- */}
-        <div className="hidden md:grid h-20 grid-cols-[1fr_auto_1fr] items-center gap-2 px-5">
-          <div className="flex items-center min-w-0">
             {!session && identidad?.nombre && (
               <button
                 onClick={confirmarCambiarIdentidad}
-                className="flex items-center gap-1.5 text-crema/75 hover:text-gold-soft transition-colors text-sm font-mono truncate"
+                className="flex items-center gap-1.5 text-crema/75 hover:text-gold-soft transition-colors text-xs sm:text-sm font-mono truncate"
               >
                 <IconCambiarIdentidad className="w-4 h-4 shrink-0" />
-                <span className="truncate">{t('layout.noSoyYo')}</span>
+                <span className="hidden sm:inline truncate">{t('layout.noSoyYo')}</span>
               </button>
             )}
           </div>
 
+          {/* Centro: selector real de semana */}
           <div className="flex flex-col items-center leading-none">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={semana.semanaAnterior}
                 aria-label={t('index.semanaAnterior')}
-                className="text-gold-soft/80 hover:text-gold-soft transition-colors font-mono text-xl px-1"
+                className="text-gold-soft/80 hover:text-gold-soft transition-colors font-mono text-lg sm:text-xl px-1"
               >
                 ‹
               </button>
               <Link
                 to="/"
-                className="font-display text-2xl font-semibold tracking-wide text-crema hover:text-gold-soft transition-colors whitespace-nowrap text-center"
+                className="font-display text-lg sm:text-2xl font-semibold tracking-wide text-crema hover:text-gold-soft transition-colors whitespace-nowrap text-center"
               >
                 {t('index.semana')}
               </Link>
               <button
                 onClick={semana.semanaSiguiente}
                 aria-label={t('index.semanaSiguiente')}
-                className="text-gold-soft/80 hover:text-gold-soft transition-colors font-mono text-xl px-1"
+                className="text-gold-soft/80 hover:text-gold-soft transition-colors font-mono text-lg sm:text-xl px-1"
               >
                 ›
               </button>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-mono text-[11px] text-crema/60 whitespace-nowrap">
+              <span className="font-mono text-[10px] sm:text-[11px] text-crema/60 whitespace-nowrap">
                 {formatearRango(semana.lunes, semana.domingo, locale())}
               </span>
               {!semana.esSemanaActual && (
                 <button
                   onClick={semana.irEstaSemana}
-                  className="font-mono text-[11px] text-gold-soft underline decoration-gold-soft/50 hover:text-crema transition-colors whitespace-nowrap"
+                  className="font-mono text-[10px] sm:text-[11px] text-gold-soft underline decoration-gold-soft/50 hover:text-crema transition-colors whitespace-nowrap"
                 >
                   {t('index.volverAEstaSemana')}
                 </button>
@@ -267,23 +194,24 @@ export default function Layout() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 min-w-0">
+          {/* Derecha: idioma + entrar/salir */}
+          <div className="flex items-center justify-end gap-2 sm:gap-3 min-w-0">
             <SelectorIdioma />
             <BotonTema />
             {session ? (
               <button
                 onClick={cerrarSesion}
-                className="flex items-center gap-1.5 text-crema/85 hover:text-gold-soft transition-colors text-sm font-mono shrink-0"
+                className="flex items-center gap-1.5 text-crema/85 hover:text-gold-soft transition-colors text-xs sm:text-sm font-mono shrink-0"
               >
-                <span>{t('layout.salir')}</span>
+                <span className="hidden sm:inline">{t('layout.salir')}</span>
                 <IconEntrar className="w-4 h-4 shrink-0 rotate-180" />
               </button>
             ) : (
               <Link
                 to="/login"
-                className="flex items-center gap-1.5 text-crema/85 hover:text-gold-soft transition-colors text-sm font-mono shrink-0"
+                className="flex items-center gap-1.5 text-crema/85 hover:text-gold-soft transition-colors text-xs sm:text-sm font-mono shrink-0"
               >
-                <span>{t('layout.entrar')}</span>
+                <span className="hidden sm:inline">{t('layout.entrar')}</span>
                 <IconEntrar className="w-4 h-4 shrink-0" />
               </Link>
             )}
@@ -317,7 +245,7 @@ export default function Layout() {
 
       {/* ===== Menú lateral ===== */}
       <aside
-        className={`fixed top-28 md:top-20 bottom-0 left-0 z-30 w-64 bg-petrol-dark text-crema flex flex-col
+        className={`fixed top-20 bottom-0 left-0 z-30 w-64 bg-petrol-dark text-crema flex flex-col
           transition-transform duration-200 ease-out
           ${menuAbierto ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
