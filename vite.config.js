@@ -13,8 +13,8 @@ export default defineConfig({
       manifest: {
         // Nombre genérico: cada congregación puede pisarlo más adelante
         // cambiando estos campos (o via VITE_APP_NAME si lo agregamos después).
-        name: 'Congregación App',
-        short_name: 'Congregación',
+        name: 'CONGRE-JW',
+        short_name: 'CONGRE-JW',
         description: 'Programa y asignaciones de la congregación',
         theme_color: '#173d3d',
         background_color: '#173d3d',
